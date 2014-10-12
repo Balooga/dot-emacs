@@ -1,0 +1,1101 @@
+# -*- mode: org -*-
+
+#+AUTHOR:    Luke Crook
+#+EMAIL:     luke@balooga.com
+
+#+TITLE:     Luke's .emacs file
+#+DATE:      [2014-03-01 Sat]
+
+#+DESCRIPTION: Initial initialization file created by Bill Clementson.  Severely modified by Luke Crook.
+
+* Introduction
+** Desired Operation
+On startup, Emacs loads the file =init.el= located in the =~/.emacs.d/= directory.  =init.el= specifies the path to the most recent version of [[http://org-mode.org][Org-Mode]], and instructs Emacs to load and run all the *.org files in the =~/.emacs.d/= directory.  Emacs will execute the Emacs Lisp statements delimited by the =begin_src= and =end_src= blocks within an .org file.
+
+** Dependencies
+1) The file =init.el= must be placed in the =~/.emacs.d/= directory.  See Section "[[*.emacs.d/init.el][.emacs.d/init.el]]" for the contents of this file.
+   - Note :: The =~= (tilde character) shorthand command refers to the user's /HOME/ directory.
+
+2) This file (=emacs.org=) in the =~/.emacs.d/= directory.
+
+3) The latest versions of Org-Mode (at least version 8) and Emacs (at least version 24.3) installed.  =init.el= expects to find the latest version of org-mode in =~/org-mode/=.
+   - Note :: If the latest version of Org-Mode is not installed in the location above, then Emacs will use an older version of Org-Mode that is distributed with Emacs.  If Org-Mode is installed in a directory other than =~/org-mode/=, then change the variable =org-dir= in "[[*.emacs.d/init.el][.emacs.d/init.el]]" appropriately.
+
+4) A =themes= directory within =~/.emacs.d/=, i.e. =~/.emacs.d/themes/=
+
+5) A =bin= directory within /HOME/, i.e. =~/bin/=
+
+6) A =site= directory within /HOME/, i.e. =~/site/=
+
+7) Download and install the free [[http://dejavu-fonts.org/wiki/Main_Page][DejaVu]] fonts for a better Emacs experience.
+
+** .emacs.d/init.el
+1) Create the file =.emacs.d/init.el=, and copy the following into it.
+
+   #+begin_example
+     ;;; http://orgmode.org/worg/org-contrib/babel/intro.html
+     ;;; init.el --- Where all the magic begins
+     ;;
+     (defvar dotfiles-dir (file-name-directory (or (buffer-file-name)
+                                                   load-file-name)))
+     
+     ;; Set the directory for the latest version of org-mode
+     (defvar org-dir (expand-file-name "org-mode" (expand-file-name "~/site")))
+     (defvar org/lisp-dir (expand-file-name "lisp" org-dir))
+     (defvar org/contrib-dir (expand-file-name "contrib/lisp" org-dir))
+     (add-to-list 'load-path org/lisp-dir)
+     (add-to-list 'load-path org/contrib-dir t)
+     
+     (defvar mswindows-p (string-match "windows" (symbol-name system-type)))
+     (defvar macosx-p (string-match "darwin" (symbol-name system-type)))
+     
+     ;; Set the location of the repository
+     (if mswindows-p
+       (defvar use-git-repo 
+         (expand-file-name "Documents/stb_main" (getenv "USERPROFILE"))))
+     
+     ;; Set the window (frame) size on startup
+     (defvar *width* nil)
+     (defvar *height* nil)
+     (defvar *x-pos* 0)
+     (defvar *y-pos* 0)
+     
+     (if (and (integerp *width*)
+              (integerp *height*))
+         (add-hook 'after-init-hook '(lambda () 
+                                       (when window-system 
+                                         (set-frame-size (selected-frame) 
+                                                         ,*width* *height*))))
+       (add-hook 'after-init-hook '(lambda () (w32-send-sys-command #xf030))))
+     
+     (when (and (integerp *x-pos*)
+                (integerp *y-pos*))
+       (set-frame-position (selected-frame) *x-pos* *y-pos*))
+     
+     (require 'org)
+     (require 'org-install)
+     (require 'ob-tangle)
+     (require 'org-id)
+     
+     ;; Load up all literate org-mode files in this directory
+     ;; In other words, load emacs.org
+     (mapc #'org-babel-load-file (directory-files dotfiles-dir t "\\.org$"))
+   #+end_example
+
+* Keys
+** General & Help
+| Key Chord | Description                             | Command           |
+|-----------+-----------------------------------------+-------------------|
+| C-g       | Cancel current command.                 | keyboard-quit     |
+| C-c h ?   | Help commands                           |                   |
+| C-c h v   | Describe Variable                       | describe-variable |
+| C-c h f   | Describe Function                       | describe-function |
+| C-c h k   | Describe function bound to key chord    | describe-key      |
+| C-c h h   | How to say "Hello" in various languages |                   |
+
+** Cursor Movement
+| Key Chord | Description                           | Command                                   |
+|-----------+---------------------------------------+-------------------------------------------|
+| C-f       | Forward one char                      | forward-char                              |
+| C-b       | Backward one char                     | backward-char                             |
+| M-f       | Forward word                          | forward-word                              |
+| M-b       | Backward word                         | backward-word                             |
+| M-e       | End of sentence, or table field       | org-forward-sentence / forward-sentence   |
+| M-a       | Beginning of sentence, or table field | org-backward-sentence / backward-sentence |
+| C-a       | Beginning of line                     | org-beginning-of-line                     |
+| C-e       | End of line                           | org-end-of-line                           |
+|           |                                       |                                           |
+| C-p       | Up to previous line                   | previous-line                             |
+| C-n       | Down to next line                     | next-line                                 |
+| C-v       | Scroll screen down                    | cua-scroll-up                             |
+| M-v       | Scroll screen up                      | cua-scroll-down                           |
+| M->       | End of file                           | end-of-buffer                             |
+| M-<       | Top of file                           | beginning-of-buffer                       |
+| C-l       | Re-center screen on current line      | recenter-top-bottom                       |
+
+** Editing Commands
+| Key Chord      | Description                              | Command                   |
+|----------------+------------------------------------------+---------------------------|
+| C-z            | Undo                                     | undo                      |
+| M-y            | Copy                                     | kill-ring-save            |
+| M-y            | Paste                                    | cua-paste-pop / cua-paste |
+| C-y            | Cut or "Yank" (not the American)         | org-yank                  |
+|                |                                          |                           |
+| C-h, BACKSPACE | Delete previous character                | org-delete-backward-char  |
+| C-d, DEL       | Delete character forwards                | org-delete-char           |
+| C-w            | Delete previous word                     | backward-kill-word        |
+| M-d            | Delete forward word                      | kill-word                 |
+| C-k            | Delete forward rest of line from cursor  | org-kill-line / kill-line |
+|                |                                          |                           |
+| M-c            | Capitalize word                          | capitalize-word           |
+| M-u            | Uppercase word                           | upcase-word               |
+|                |                                          |                           |
+| C-q            | Read next input character and insert it. | quoted-insert             |
+
+** File manipulation
+| Key Chord | Description                                       | Command            |
+|-----------+---------------------------------------------------+--------------------|
+| C-x f     | List recently opened files                        | recentf-open-files |
+| C-x C-f   | Open or create a file                             |                    |
+| C-x C-v   | Replace buffer with a different file              |                    |
+| C-x i     | Insert file at current cursor position            |                    |
+| C-x C-s   | Save buffer to file                               |                    |
+| C-x s     | Save all changed buffers.                         |                    |
+| C-x C-w   | Write buffer to file (will prompt for file name). |                    |
+| C-x C-c   | Save buffers and exit emacs                       |                    |
+| C-x d     | Start [[http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html][dired]].  File/directory management           | dired              |
+|           |                                                   |                    |
+
+** Org-Mode commands
+
+* Start timing .emacs load time
+#+BEGIN_SRC emacs-lisp
+(defvar *emacs-load-start* (current-time))
+#+END_SRC
+
+* OS-Specific Variables 
+# See if we're on MS Windows or some other OS
+#+begin_src emacs-lisp
+  (defvar mswindows-p (string-equal "windows" (symbol-name system-type)))
+  (defvar macosx-p (string-equal "darwin" (symbol-name system-type)))
+  (defvar gnu/linux-p (string-equal "gnu/linux" (symbol-name system-type)))
+#+end_src
+
+* Set General Paths
+** General
+#+begin_src emacs-lisp
+  (defvar use-home (expand-file-name "~"))
+  (defvar use-home/site (expand-file-name "site" use-home))
+  (defvar use-home/bin (expand-file-name "bin" use-home))
+  
+  (add-to-list 'load-path use-home)  
+  (add-to-list 'load-path use-home/site)
+  (add-to-list 'load-path use-home/bin)
+#+end_src
+
+** Color Theme Load Path
+#+begin_src emacs-lisp
+  (add-to-list 'custom-theme-load-path (expand-file-name "themes" dotfiles-dir))
+#+end_src
+
+** Spellcheck
+Replace the default Ispell dictionary with "Hunspell"
+http://hunspell.sourceforge.net/
+
+#+begin_src emacs-lisp
+  ;(setenv "PATH" (concat (getenv "PATH") hunspell-path))
+  (defvar use-hunspell (expand-file-name "hunspell" use-home/site))
+  
+  (setq exec-path (append exec-path 
+                          (list (expand-file-name "bin" 
+                                                  use-hunspell))))
+  ;; Replace ispell with hunspell
+  (when (executable-find "hunspell")
+    (setq-default ispell-program-name "hunspell")
+    (setq ispell-really-hunspell t)
+    ;;(setq ispell-extra-args '("-a" "-i" "utf-8"))
+    (setq ispell-extra-args '("-i" "utf-8"))
+    ;;(setq ispell-extra-args nil)
+    (setq ispell-local-dictionary-alist (list 
+                                         (list "american-hunspell"
+                                               "[[:alpha:]]"
+                                               "[^[:alpha:]]"
+                                               "[']"
+                                               t
+                                               (list "-d" 
+                                                     (expand-file-name "dict/en_US" 
+                                                                       use-hunspell))
+                                               nil
+                                               'utf-8)))
+    (setq ispell-dictionary "american-hunspell"))
+#+end_src
+
+** PlantUML
+#+begin_src emacs-lisp
+  (defvar org-plantuml-jar-path
+    (expand-file-name "plantuml.jar" use-home/site))
+#+end_src
+
+** exec-path
+#+begin_src emacs-lisp
+  (when mswindows-p
+    (add-to-list 'exec-path (expand-file-name "bin" (getenv "EMACS_DIR")))
+    (add-to-list 'exec-path "C:/Windows/system32")
+    (add-to-list 'exec-path "C:/Windows")
+    (add-to-list 'exec-path "C:/Program Files (x86)/Git/bin"))
+#+end_src
+
+** Backup Path
+Backups are disabled, per Section "[[*Backups][Backups]]".
+#+begin_src emacs-lisp
+  ;; Specify where backup files are stored
+  ;; Backups have to be enabled
+  (setq backup-directory-alist (quote ((".*" . "~/.backups"))))
+#+end_src
+** Slime Path
+#+BEGIN_SRC emacs-lisp
+  ;; Setup load-path and autoloads
+  (add-to-list 'load-path (expand-file-name "slime" use-home/site))
+  (require 'slime-autoloads)
+
+  ;; Set your lisp system and some contribs
+  (setq inferior-lisp-program (concat "~/lw-console.exe -init "
+                                      use-home
+                                      "/lispworks.lisp"))
+  (setq slime-contribs '(slime-fancy))
+#+END_SRC
+* Initial Code Load
+#+begin_src emacs-lisp
+  (require 'cl)
+  (require 'browse-url)
+#+end_src
+
+* System Customization
+** Menu Bar, Tool Bar & Scroll Bars
+The configuration file in =~/.emacs.d/emacs.org= specifies disables the Menu, Menu Bar, and Scroll Bar.  The Menu, Menu Bar, and Scroll Bar can be disabled or enabled within Emacs as follows;
+
+1) Enter \keys{\Alt + x} =customize= (Alt-x =customize=), and
+2) Search for and enable /Menu Bar/, /Scroll Bar/ & /Tool Bar/.
+3) Apply and save changes.
+   
+To change the color theme;
+
+1) Enter \keys{\Alt + x} =customize-themes= (Alt-x =customize-themes=), and
+2) Choose a theme from the list of available themes.
+3) Apply and save changes.
+#+begin_src emacs-lisp
+  ;; http://sites.google.com/site/steveyegge2/effective-emacs
+  (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1)) ; Turn off the damn scroll bar
+  (if (fboundp 'tool-bar-mode) (tool-bar-mode -1)) ;Turn off the damn tool bar
+                                                   ;Note that in win32, this interferes with maximizing Emacs
+  (when mswindows-p 
+    (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))) ;Turn off the menu bar
+#+end_src
+
+** Recentf
+Add recently edited files to a menu.
+#+begin_src emacs-lisp
+  (require 'recentf)
+  (recentf-mode 1)                      
+#+end_src
+
+** Buffer Names
+Make buffer names unique.
+#+begin_src emacs-lisp
+  (require 'uniquify)
+  ; Use pathnames instead of <n> to uniquify buffer names
+  (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+#+end_src
+
+** Fonts
+- C-u C-x = :: Will describe the character under the cursor position, and show the font that it is rendered in.
+- M-x list-faces-display :: Will display all faces that are currently defined.
+     http://www.gnu.org/software/emacs/manual/html_node/emacs/Faces.html#Faces
+- M-x describe-face :: e.g. M-x describe-face org-column-title, will allow customization of the title bar when in column mode.
+     
+#+begin_src emacs-lisp
+  ;; Set to a decently small font
+  (cond ((member "DejaVu Sans Mono" (font-family-list)) ; Really nice font for text editing
+         (set-frame-font "DejaVu Sans Mono:antialias=natural") ; antialias=natural/none/standard/subpixel
+         (set-face-attribute 'default nil :family "DejaVu Sans Mono" :weight 'normal :height 90))
+        ((member "Menlo" (font-family-list))
+         (set-frame-font "Menlo:antialias=natural") ; antialias=natural/none/standard/subpixel
+         (set-face-attribute 'default nil :family "Menlo" :weight 'normal :height 120)))
+#+end_src
+
+Other good fonts for Emacs are;
+- Consolas
+- Inconsolata
+- Anonymous Pro
+- Monofur
+- ProFont
+- Monospace
+- Liberation Mono
+- Liberation Sans
+- Nimbus Mono L
+- Nimbus Sans L
+- Bitstream Vera Sans Mono
+- DejaVu Sans Condensed
+  
+** Behaviour Within Buffers 
+#+begin_src emacs-lisp
+  (setq next-line-add-newlines nil) ;; Normally, C-n on the last line of a buffer appends a newline to it. 
+                                    ;; If the variable next-line-add-newlines is nil, then C-n gets an error instead 
+                                    ;; (like C-p on the first line).
+  
+  ;;(setq inhibit-eol-conversion t) ; This makes the windows EOL character ^M appear in the buffer
+#+end_src
+
+** Scrolling
+#+begin_src emacs-lisp
+  (setq scroll-step 1)
+  (setq scroll-conservatively 5)
+#+end_src
+
+** Misc customizations
+#+begin_src emacs-lisp
+  ;; Enable emacs functionality that is disabled by default
+  (put 'set-goal-column 'disabled nil)
+  (put 'narrow-to-page 'disabled nil)
+  (put 'narrow-to-region 'disabled nil)
+  (put 'eval-expression 'disabled nil)
+  (put 'downcase-region 'disabled nil)
+  (put 'upcase-region 'disabled nil)
+  (setq enable-recursive-minibuffers t)
+  
+  (fset 'yes-or-no-p 'y-or-n-p)           ;replace y-e-s by y
+  (setq inhibit-startup-message t)        ;no splash screen
+  
+  ;; Iswitchb is much nicer for inter-buffer navigation.
+  (iswitchb-mode 1)
+#+end_src
+
+** Searching & Highlighting
+#+begin_src emacs-lisp
+  ;; highlight matches from searches
+  (setq isearch-highlight t) ;???
+  
+  (setq query-replace-highlight t) ; highlight during searching ; Highlight query object
+  (setq search-highlight t) ; highlight incremental search ; Highlight search object
+  (setq mouse-sel-retain-highlight t) ; Keep mouse high-lightening 
+#+end_src
+
+** Backups
+#+begin_src emacs-lisp
+  (setq backup-inhibited t) ;disable backup  
+  (setq make-backup-files nil) ;do not make backup files
+  (setq use-backup-dir t)  ;use backup directory
+#+end_src
+
+** Auto-save
+#+begin_src emacs-lisp
+  (setq auto-save-default nil)            ;disable auto save
+#+end_src
+
+** Text Mark, Select, Copy, Paste & Cut
+#+begin_src emacs-lisp
+  (cua-mode t)
+  
+  ;; MS Windows Conventional mouse/arrow movement & selection
+  ;;(delete-selection-mode t) ; Set in cua-mode
+  ;; (transient-mark-mode t) ; org-mode
+    
+  ;;(cua-selection-mode nil) ;; C-c=Copy, C-x=Cut, C-v=Paste
+  ;;(cua-selection-mode t)    ;; Use the standard Emacs keys for copy/paste etc.
+  
+  ;; This is set by CUA-mode.  Defining this anyway in case CUA editing keys are disabled.
+  (define-key global-map [?\C-z] 'undo) ;; Map C-z back to undo
+  
+  ;; (setq cua-highlight-region-shift-only nil) ;; Set transient mark mode. i.e C-SPACE
+  ;; (setq cua-toggle-set-mark t)
+    
+  ;; Make the Emacs kill ring work nice with the system clipboard.
+  ;; Otherwise copy/paste between Emacs and the system will not work.
+  (unless mswindows-p
+    (setq x-select-enable-clipboard t))
+#+end_src
+
+** Cursor Colors
+#+begin_src emacs-lisp
+  ;; This requires (cua-mode t), set previously.
+  (setq cua-enable-cursor-indications t)  ; Enable the cursor indications
+  (setq cua-normal-cursor-color "orange") ; The following will use a ORANGE cursor 
+                                          ; in normal (insertion) mode in read-write buffers, 
+  (setq cua-overwrite-cursor-color "red") ; a RED cursor in overwrite mode in read-write buffers, 
+  (setq cua-read-only-cursor-color "green") ; and a GREEN cursor read-only buffers
+#+end_src
+
+** Font Lock
+#+begin_src emacs-lisp
+  ;; (require 'font-lock)
+  
+  ;; Necessary for very large files
+  ;; See "http://www.sunsite.ualberta.ca/Documentation/Gnu/emacs-20.7/html_chapter/emacs_18.html"
+  ;; for a description of when to use font-lock versus jit-lock modes.
+  (global-font-lock-mode t) ;; colorize all buffers
+  (setq jit-lock-stealth-time 16
+        jit-lock-defer-contextually t
+        jit-lock-stealth-nice 0.5)
+  ;(setq font-lock-multiline t)
+#+end_src
+
+** Dired
+File and directory management.
+http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html
+
+#+begin_src emacs-lisp
+  (require 'dired)
+  (setq dired-listing-switches "-l")
+  (setq ls-lisp-dirs-first t) ; display dirs first in dired
+#+end_src
+
+** Modeline etc.
+#+begin_src emacs-lisp
+;; Set the name of the host and current path/file in title bar:
+(setq frame-title-format
+      (list (format "%s %%S: %%j " (system-name))
+	    '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
+
+;; Column & line numbers in mode bar
+(column-number-mode t)
+(line-number-mode t)
+
+(setq indicate-buffer-boundaries 'left)
+
+(size-indication-mode 1)
+(setq display-time-24hr-format t)
+(display-time-mode 1)
+#+end_src
+
+** Image Support
+#+begin_src emacs-lisp
+;; Add PNG support to emacs
+;; http://www.libpng.org/pub/png/libpng.html
+;; http://openil.sourceforge.net/
+;; http://stackoverflow.com/questions/2650041/emacs-under-windows-and-png-files
+#+end_src
+
+** Associate File Extensions to Major Modes
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.asd$" . lisp-mode)) ;; Allow ASDF files to be edited as lisp files
+#+end_src
+
+** Mouse Events
+#+begin_src emacs-lisp
+  ;; Disable mouse-2 event that was appending text into documents
+  (global-set-key [mouse-2] nil)
+#+end_src
+
+** Shells
+#+begin_src emacs-lisp
+  ;; Shells are assigned to f11
+  ;; F11 - eshell
+  (global-set-key [f11] '(lambda ()
+                      (interactive)
+                      (eshell)))
+    
+  ;; ctrl-F11 cmdproxy
+  (global-set-key [(control f11)]
+                  '(lambda ()
+                    (interactive)
+                    (cond
+                      (mswindows-p
+                       (let ((explicit-shell-file-name
+                              (expand-file-name "bin/cmdproxy.exe" (getenv "EMACS_DIR")))
+                             (shell-file-name "cmdproxy.exe"))
+                         (shell)))
+                      (t (shell)))))
+  ;; Alt-F11 bash
+  (global-set-key [(meta f11)]
+                  '(lambda ()
+                    (interactive)
+                    (let ((explicit-shell-file-name
+                           (if mswindows-p
+                               "bash.exe"
+                               "bash"))
+                          (shell-file-name
+                           (if mswindows-p
+                               "bash.exe"
+                               "bash")))
+                      (shell))))
+#+end_src
+
+** Window Management
+#+ATTR_LaTeX: :align |l|p{10cm}|
+| Key Chord | Description                                                                                                              |
+|           | <120>                                                                                                                    |
+|-----------+--------------------------------------------------------------------------------------------------------------------------|
+| C-x 2     | split-window-vertically -- splits your current window into two equal-height windows showing the same buffer (until you change one of them to show something else.) |
+| C-x 3     | split-window-horizontally -- most people don't use this as often, but it's occasionally useful. Splits the window into a left-side and a right-side. |
+| C-x +     | balance-windows -- makes all visible windows approximately equal height. This is useful if you've just done Ctrl-x 2 twice in a row, because you'll have two 1/4-height windows and one 1/2-height window. Ctrl-x + makes them all the same height. |
+| C-x 1     | delete-other-windows -- makes the currently focused window fill the entire frame; the others go away. Note that the buffers they were visiting stay around in the buffer-list, so it's always perfectly safe to execute this command. |
+| C-x C-b   | list-buffers -- shows a list of all the buffers you have open, in a nicely formatted buffer called "*Buffer List*". This buffer's mode has many convenience keys for manipulating the buffer list. For instance, typing "d" while the cursor is on one of the entries will flag that buffer for deletion, "x" will kill the buffer, and so on. Use M-x describe-bindings to view all the Buffer-menu key bindings. |
+| C-x o     | other-window -- jumps to another window                                                                                  |
+| C-x p     | jumps to the previous window                                                                                             |
+
+#+begin_src emacs-lisp
+  ;; Opposite of C-x o
+  ;; (other-window -1)  
+  (global-set-key [(control x) (p)] '(lambda () 
+                                      (interactive)
+                                      (other-window -1)))
+#+end_src
+
+** Standard Key Overrides
+#+begin_src emacs-lisp
+  ;; Prevent accidentally killing emacs.
+  (global-set-key [(control x) (control c)] 
+                  '(lambda ()
+                     (interactive)
+                     (if (y-or-n-p-with-timeout "Do you really want to exit Emacs ? " 4 nil)
+                         (save-buffers-kill-emacs))))
+  
+  ;; Get rid of set-fill-column, and instead open a list of recent files
+  (global-set-key [(control x) (f)] 'recentf-open-files)
+        
+  ;; Shortcuts to common functions
+  (global-set-key [(control c) (f)] 'find-function-at-point)
+  (global-set-key [(control c) (g)] 'goto-line)
+  (global-set-key [(control c) (control g)] 'goto-line)
+    
+  ;; keys for buffer creation and navigation.  
+  ;;  Use C-x C-b instead of the usual C-x b
+  (global-set-key [(control x) (control b)] 'iswitchb-buffer)
+    
+  ;; Set C-c h to help
+  (global-set-key [(control c) (h)] 'help-command)
+  
+  ;; For whatever reason, the HELLO file locks up this version of Emacs for Windows.
+  ;; Unset this command.
+  (global-unset-key [(control c) (h) (h)])
+     
+  ;; http://sites.google.com/site/steveyegge2/effective-emacs
+  ;; Item 2: Invoke M-x without the Alt key
+  (global-set-key [(control x) (control m)] 'execute-extended-command)
+    
+  ;;Item 3: Prefer backward-kill-word over Backspace
+  (global-set-key [(control w)] 'backward-kill-word)
+  (global-set-key [(control x) (control k)] 'kill-region) ;; Instead of C-w 
+  ;;(global-set-key "\C-c\C-k" 'kill-region) ; org-mode has this mapped      
+  
+  ;; Map pcomplete to C-<tab>, otherwise clobbered by flyspell mode
+  ;(global-set-key [(control c) (tab)] 'pcomplete)
+#+end_src
+
+** OSX Key Overrides
+M-x customize-group RET ns RET
+
+See http://emacsformacosx.com/tips
+
+#+begin_src emacs-lisp
+;; (setq ns-right-command-modifier 'meta)
+#+end_src
+
+** Emacs Client                                                   :noexport:
+Eventually, add support for Emacs Client here; http://www.emacswiki.org/emacs/EmacsClient
+#+begin_src emacs-lisp
+  ;; Note that the cua-emul, gnuserve & cua libraries are optional
+  ;; (if mswindows-p
+  ;;     (progn
+  ;;       ;; Grep equivalent on Windows
+  ;;       ;;(setq grep-command "c:/cygwin/bin/grep -n -a -e ")
+  ;;       (setq grep-command "findstr /n /s ")
+
+  ;;       ;; Windows Execute from dired
+  ;;       (define-key dired-mode-map "w"
+  ;;         (function
+  ;;          (lambda ()
+  ;;            (interactive)
+  ;;            (setq w32-shellex-no-dired-hook t)
+  ;;            (require 'w32-shellex)
+  ;;            (w32-shellex-dired-on-objects))))
+
+  ;;       ;; Start gnuserv on Windows 
+  ;;       (if (or (eq window-system 'w32) (eq window-system 'win32))
+  ;;           (when (require 'gnuserv nil 'noerror)
+  ;;             (setq server-done-function 'bury-buffer 
+  ;;                   gnuserv-frame (car (frame-list))) 
+  ;;             (gnuserv-start) 
+  ;;             ;; Open buffer in existing frame instead of creating new one... 
+  ;;             (setq gnuserv-frame (selected-frame)) 
+  ;;             (message "gnuserv started.")))))
+#+end_src
+
+** Working with Asynchronous External Processes                   :noexport:
+#+begin_src emacs-lisp
+  ;; (require 'comint)
+#+end_src
+
+** Auto Completion                                                :noexport:
+From https://github.com/auto-complete/auto-complete
+#+BEGIN_SRC emacs-lisp
+  (if t 
+      (progn
+        (add-to-list 'load-path (expand-file-name "auto-complete-master" use-home/site))
+        (add-to-list 'load-path (expand-file-name "popup-el-master" use-home/site))
+
+        (require 'auto-complete)
+        (require 'auto-complete-config)
+
+        (ac-config-default)))
+#+END_SRC
+
+** Undo/Redo with Undo-Tree                                       :noexport:
+http://www.emacswiki.org/emacs/UndoTree
+http://ergoemacs.org/emacs/emacs_best_redo_mode.html
+#+BEGIN_SRC emacs-lisp
+  ;(require 'undo-tree)
+  
+  ;(global-undo-tree-mode)
+  
+  ;(defalias 'redo 'undo-tree-redo)
+  ;(global-set-key [(control z)] 'undo) ; [Ctrl+z]
+  ;(global-set-key [(control shift z)] 'redo) ; [Ctrl+Shift+z];  Mac style  
+  ;(global-set-key [(control y)] 'redo) ; [Ctrl+y]; Microsoft Windows style
+#+END_SRC
+
+** Smart Home
+Currently not enabled as Org-Mode does a better job.
+http://stackoverflow.com/questions/145291/smart-home-in-emacs
+#+BEGIN_SRC emacs-lisp
+  (defun smart-beginning-of-line ()
+    "Move point to first non-whitespace character or beginning-of-line.
+  
+  Move point to the first non-whitespace character on this line.
+  If point was already at that position, move point to beginning of line."
+    (interactive) ; Use (interactive "^") in Emacs 23 to make shift-select work
+    (let ((oldpos (point)))
+      (back-to-indentation)
+      (and (= oldpos (point))
+           (beginning-of-line))))
+  
+  ;;(global-set-key [home] 'smart-beginning-of-line)
+#+END_SRC
+
+** Common Lisp Editing
+*** Paredit
+#+BEGIN_SRC emacs-lisp
+  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  (add-hook 'slime-repl-mode-hook 'enable-paredit-mode)
+
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "[") 'paredit-open-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "]") 'paredit-close-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "M-[") 'paredit-wrap-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "(") 'paredit-open-square))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd ")") 'paredit-close-square))
+
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "C-c C-f") 'paredit-forward))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "C-c C-b") 'paredit-backward))
+
+#+END_SRC
+
+*** Highlighting Parenthesis
+#+BEGIN_SRC emacs-lisp
+  ;;(require 'highlight-sexps)
+  ;(autoload 'highlight-sexps-mode "highlight-sexps-" "Turn on highlighting of sexps." t)
+  ;(add-hook 'lisp-mode-hook 'highlight-sexps-mode)
+  ;(add-hook 'emacs-lisp-mode-hook       #'highlight-sexps-mode)
+  ;(add-hook 'eval-expression-minibuffer-setup-hook #'highlight-sexps-mode)
+  ;(add-hook 'lisp-interaction-mode-hook #'highlight-sexps-mode)
+  ;(add-hook 'slime-repl-mode-hook 'highlight-sexps-mode)
+
+  ;(setq hl-sexp-background-colors '("Gray10" "Gray20"))
+
+  (add-to-list 'load-path (expand-file-name "parenface-master" use-home/site)) 
+  (require 'parenface)
+  (eval-after-load 'parenface
+    (progn
+      (set-face-foreground 'parenface-paren-face "SteelBlue4")
+      (set-face-foreground 'parenface-bracket-face "SteelBlue4")
+      (set-face-foreground 'parenface-curly-face "SteelBlue4")))
+#+END_SRC
+
+* Version Control
+** Ediff
+#+begin_src emacs-lisp
+  (defconst ediff-ignore-similar-regions t)
+  (defconst ediff-use-last-dir t)
+  (defconst ediff-diff-options " -b ")
+#+end_src
+
+** Git (Magit)
+https://github.comk/magit/magit
+#+begin_src emacs-lisp
+  (add-to-list 'load-path (expand-file-name "magit-master" use-home/site))
+  (add-to-list 'load-path (expand-file-name "git-modes-master" use-home/site))
+    
+  (require 'magit)
+    
+  (global-set-key [(control x) (g)] 'magit-status)
+  
+  ;; This is here to stop the following error in Magit;
+  ;; "The directory ~/.emacs.d/server is unsafe"
+  (and (>= emacs-major-version 23)
+       (defun server-ensure-safe-dir (dir) "Noop" t))
+#+end_src
+
+* Color Theme
+Themes include;
+
+| adwaita    | deeper-blue | dichromacy      | light-blue       |
+| manoj-dark | misterioso  | solarized-dark* | solarized-light* |
+| tango      | tango-dark  | tsdh-dark       | tsdh-light       |
+| wheatgrass | whiteboard  | wombat          | zenburn          |
+
+ * Not distributed as part of Emacs, but a nice theme anyway.
+   
+ https://github.com/bbatsov/solarized-emacs
+ 
+ #+begin_src emacs-lisp
+(add-to-list 'load-path (expand-file-name "emacs-color-theme-solarized-master" use-home/site))
+
+;(load-theme 'manoj-dark t)
+ #+end_src
+ 
+* Mode-Line Customizations
+** Smart-Mode-Line
+https://github.com/Bruce-Connor/smart-mode-line/
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path (expand-file-name "dash.el-master" use-home/site))
+(add-to-list 'load-path (expand-file-name "smart-mode-line-master" use-home/site))
+
+;(setq sml/theme 'dark)
+;(setq sml/theme 'light)
+;(setq sml/theme 'respectful)
+(setq sml/theme 'automatic)
+
+(require 'smart-mode-line)
+
+;(sml/setup)
+#+END_SRC
+
+** Powerline
+https://github.com/milkypostman/powerline
+#+BEGIN_SRC emacs-lisp  
+  (add-to-list 'load-path (expand-file-name "powerline-master" use-home/site))
+  
+  (require 'powerline)
+  
+  ;(powerline-default-theme)
+  (powerline-center-theme)
+#+END_SRC
+* ORG-mode
+** Initial Code Load
+Handled in init.el, per Section [[*.emacs.d/init.el][.emacs.d/init.el]].
+
+** Loading TaskJuggler export backend
+#+begin_src emacs-lisp
+  (require 'ox-taskjuggler)
+#+end_src
+
+** Loading Confluence export backend                              :noexport:
+#+begin_src emacs-lisp
+  ;; (require 'ox-confluence)
+#+end_src
+
+** Associate File Extensions to Major Modes
+#+begin_src emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode)) ;; Specify files to be edited in org-mode
+#+end_src
+
+** Set up Auto-Complete for Org-mode                              :noexport:
+See https://github.com/aki2o/org-ac
+#+BEGIN_SRC emacs-lisp
+  ;(add-to-list 'load-path (expand-file-name "auto-complete-pcmp" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "log4e" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "org-ac" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "yaxception" use-home/site))
+  
+  ;(require 'org-ac)
+  
+  ;; Make config suit for you. About the config item, eval the following sexp.
+  ;; (customize-group "org-ac")
+  
+  ;(org-ac/config-default)  
+#+END_SRC
+
+** Org-mode Key Bindings
+#+begin_src emacs-lisp
+  (define-key org-mode-map "\C-h" 'org-delete-backward-char)
+  (global-set-key [(control c) (l)] 'org-store-link)
+  (global-set-key [(control c) (c)] 'org-capture)
+  (global-set-key [(control c) (a)] 'org-agenda)
+  (global-set-key [(control c) (b)] 'org-iswitchb) ; Similar to iswitchb, but filters to org buffers
+  (global-set-key [(control x) (b)] 'org-iswitchb) ; Override default iswitchb-buffer keys
+  
+  (setq org-special-ctrl-a/e t) ; Set C-a and C-e to behave specially, 
+                                ; considering the headline and not the leading stars, 
+                                ; todo keywords, or the trailing tags.
+  
+  (setq org-special-ctrl-k t) ; When the cursor is at the beginning of a headline, kill
+                              ; the entire line and possible the folded subtree below the
+                              ; line.
+                              ; When in the middle of the headline text, kill the
+                              ; headline up to the tags.
+                              ; When after the headline text, kill the tags.
+#+end_src
+
+** Babel
+Set up org-babel to process emacs-lisp, ditaa, Graphviz (dot), and plantuml.
+
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages 
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (ditaa . t)
+     (dot . t)
+     (plantuml . t)))
+  
+  (defun my-org-confirm-babel-evaluate (lang body)
+    (and (not (string= lang "ditaa"))      ; don't ask for ditaa
+         (not (string= lang "dot"))        ; don't ask for Graphviz (dot)
+         (not (string= lang "emacs-lisp")) ; don't ask for emacs lisp   
+         (not (string= lang "plantuml")))) ; don't ask for plantuml
+  
+  (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
+#+end_src
+
+** Tag Customization
+#+begin_src emacs-lisp
+  ;; Turn on tag inheritance
+  (setq org-use-tag-inheritance t)
+  ;; Make headlines with inherited tags show up in tag searches
+  (setq org-tags-match-list-sublevels t)
+  
+  ;; I can fit ~155 characters across the screen; 3 more are needed for the
+  ;; ellipsis for folded items, so -150 is about right for the tag position.
+  (setq org-tags-column -77)
+  ; Use the same settings in the agenda
+  ;(setq org-agenda-tags-column org-tags-column)
+#+end_src
+
+** Todo Customization
+#+begin_src emacs-lisp
+  ;; Automatically change TODO entry to DONE when all children are done:
+  ;; http://orgmode.org/manual/Breaking-down-tasks.html#Breaking-down-tasks
+  (defun org-summary-todo (n-done n-not-done)
+    "Switch entry to DONE when all subentries are done, to TODO otherwise."
+    (let (org-log-done org-log-states)   ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+  (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+#+end_src
+
+** Default TODO List
+** Misc Customizations
+#+begin_src emacs-lisp
+  (setq org-log-done t)
+  (add-hook 'org-mode-hook 'turn-on-font-lock)  ;Org buffers only
+  (setq org-agenda-show-all-dates t)
+  
+  (setq org-agenda-archives-mode nil)
+  (setq org-agenda-skip-comment-trees nil)
+  (setq org-agenda-skip-function nil)
+
+  (add-hook 'org-mode-hook 
+            'turn-on-visual-line-mode) ;Wrap lines at window edge
+#+end_src
+
+** Fonts
+*** Column View
+Ensure that column view uses fixed width font.
+#+begin_src emacs-lisp
+  (when (fboundp 'set-face-attribute)
+      ;; Make sure that a fixed-width face is used when we have a column
+      ;; table.
+      (set-face-attribute 'org-column nil
+                          :height (face-attribute 'default :height)
+                          :family (face-attribute 'default :family)))
+#+end_src
+
+*** Tables
+Ensure that tables use fixed-pitch fonts
+#+begin_src emacs-lisp
+  (when (fboundp 'set-face-attribute)
+      ;; Make sure that a fixed-width face is used when we have a column
+      ;; table.
+      (set-face-attribute 'org-table nil
+                          :height (face-attribute 'default :height)
+                          :family (face-attribute 'default :family)))
+#+end_src
+
+** Spelling
+Set up Hunspell  and flyspell for org-mode.  But only spellcheck in code blocks.
+
+Flyspell maps the following keys;
+
+- C-. flyspell-auto-correct-word
+
+#+begin_src emacs-lisp
+  ;;(add-hook 'org-mode-hook 'flyspell-prog-mode 'append)
+   
+  ;;(setq flyspell-issue-message-flag nil) ; for speed apparently
+  
+  ;; some extra flyspell delayed command
+  ;; (mapcar 'flyspell-delay-command      
+  ;;      '(scroll-up1 scroll-down1))
+  
+  (global-unset-key [(control /)]) ;; Remove the mapping of undo.  Reused in flyspell.
+  (global-unset-key [(control \,)]) ;; Remove the mapping of undo.  Reused in flyspell.
+  (global-set-key [(f8)] 'flyspell-mode)
+    
+  (defun flyspell-check-next-highlighted-word ()
+    "Custom function to spell check next highlighted word"
+   (interactive)
+    (flyspell-goto-next-error))
+                                      
+  (add-hook 'flyspell-mode-hook (lambda ()
+                                  (if flyspell-mode
+                                      (progn
+                                        (flyspell-buffer)
+                                        (local-set-key [(control /)] 
+                                                       'flyspell-check-next-highlighted-word)
+                                        (local-set-key [(control \,)] 
+                                                       'flyspell-check-previous-highlighted-word))
+                                    (progn
+                                      (local-unset-key [(control /)])
+                                      (local-unset-key [(control \,)])))))
+#+end_src
+
+** Footnotes
+Enable automatic renumbering of footnotes
+#+begin_src emacs-lisp
+  ;;(setq org-footnote-auto-adjust t) ;Or place the following in the .org file 
+                                      ;#+STARTUP: fnadjust
+#+end_src
+
+** Document Generation
+*** Custom LaTeX title page
+
+** Links
+#+begin_src emacs-lisp
+  (setq org-id-link-to-org-use-id t)
+#+end_src
+
+** Fontify source blocks in Latex
+#+BEGIN_SRC emacs-lisp
+ (setq org-latex-listings t)
+
+ (add-to-list 'org-latex-packages-alist '("" "listings"))
+#+END_SRC
+
+** Syntax highlight source blocks in the org buffer
+#+BEGIN_SRC emacs-lisp
+(setq org-src-fontify-natively t)
+#+END_SRC
+
+** Set when Deadlines appear in Agenda view
+#+BEGIN_SRC emacs-lisp
+(setq org-deadline-warning-days 30)
+#+END_SRC
+
+** Delete the ID when cloning a subtree
+#+BEGIN_SRC emacs-lisp
+(setq org-clone-delete-id t)
+#+END_SRC
+
+** Allow alphabetical lists
+#+BEGIN_SRC emacs-lisp
+(setq org-list-allow-alphabetical t)
+#+END_SRC
+
+** Set UTF-8 as the defaut encoding
+#+BEGIN_SRC emacs-lisp
+(setq org-export-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(set-charset-priority 'unicode)
+(setq default-process-coding-system '(utf-8-unix . utf-8-unix))
+#+END_SRC
+
+** Log working time into a LOGBOOK drawer
+#+BEGIN_SRC emacs-lisp
+(setq org-clock-into-drawer t)
+#+END_SRC
+
+** Function to return just the date of the most recent commit
+#+BEGIN_SRC emacs-lisp
+  (defun vc-git-print-log-date-only (files buffer)
+    "Get the date of the most recent commit associated with FILES."
+    (let ((coding-system-for-read vc-git-commits-coding-system))
+      ;; `vc-do-command' creates the buffer, but we need it before running
+      ;; the command.
+      (vc-setup-buffer buffer)
+      ;; If the buffer exists from a previous invocation it might be
+      ;; read-only.
+      (let ((inhibit-read-only t))
+        (with-current-buffer
+            buffer
+          (apply 'vc-git-command buffer
+                 'async files
+                 (append
+                  '("log" "--no-color")
+                  '("--pretty=format:%cd" "-1")
+                  '("--")))))))
+
+  (defun return-date-of-recent-commit (buffer)
+    (require 'vc)
+    (when (vc-find-backend-function (vc-backend (buffer-file-name buffer))
+                                    'print-log-date-only)
+      (let ((limit -1)
+            (vc-fileset nil)
+            (backend nil)
+            (files nil))
+        (with-current-buffer buffer
+          (setq vc-fileset (vc-deduce-fileset t)) ;FIXME: Why t? --Stef
+          (setq backend (car vc-fileset))
+          (setq files (cadr vc-fileset)))
+        (with-temp-buffer 
+          (let ((status (vc-call-backend backend
+                                         'print-log-date-only
+                                         files
+                                         (current-buffer))))
+            (when (and (processp status) ;; Make sure status is a process
+                       (= 0 (process-exit-status status))) ;; And that it has not terminated
+              (while (not (eq 'exit (process-status status))) ;; Loop and sleep until complete
+                (sit-for 1 t)))
+            (buffer-string))))))
+#+END_SRC
+
+* Startup Display
+** Maximize the Emacs Window on Startup
+This is set in init.el
+#+begin_src emacs-lisp
+  ;; Maximize frame on startup
+  ;(if mswindows-p
+  ; (if (string= "w32" window-system)
+  ;     (progn
+        ;; Win32 maximize
+  ;      (w32-send-sys-command 61488)))
+    ;; Emacs fullscreen
+  ;  (maximize-frame))
+  
+  ;(add-hook 'after-init-hook '(lambda () (w32-send-sys-command #xf030)))
+;  (when window-system 
+;    (set-frame-size (selected-frame) 80 24))
+#+end_src
+
+** Start Dired in the repo directory
+#+begin_src emacs-lisp
+  ;;;;    Start Directory
+  ;(find-file use-git-repo)
+  ;(setq default-directory use-home)
+  (find-file use-home)
+#+end_src
+
+* End timing .emacs load time
+#+BEGIN_SRC emacs-lisp
+  (defvar *emacs-load-end* (current-time))
+
+  (defun dot-load-time ()
+    (interactive)
+    (message ".emacs loaded in %ds" 
+             (destructuring-bind (hi lo ms ps) *emacs-load-end*
+               (- (+ hi lo)
+                  (+ (first *emacs-load-start*) (second *emacs-load-start*))))))
+#+END_SRC
+
+* Specify the Emacs Custom file
+Location to store variables modified by the Emacs "customize" command.
+#+BEGIN_SRC emacs-lisp
+(setq custom-file (expand-file-name ".emacs-custom.el" dotfiles-dir))
+(load custom-file 'noerror)
+#+END_SRC
+* Customize                                                :noexport:ARCHIVE:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+** Startup/Options
+#+STARTUP:   hidestars content oddeven lognotedone indent align
+#+OPTIONS:   author:t creator:nil timestamp:t email:t skip:t
+
+
