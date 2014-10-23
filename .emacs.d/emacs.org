@@ -303,15 +303,15 @@ Location to store variables modified by the Emacs "customize" command.
 #+END_SRC
 ** Scrolling
 #+BEGIN_SRC emacs-lisp
-;;Smooth keyboard scrolling
-(setq
- redisplay-dont-pause t                 ;; scrolling
- scroll-step 1                          ;; scroll line per line (1 line instead of 3)
- scroll-margin 0                        ;; do smooth scrolling, ...
- scroll-conservatively 100000           ;; ... the defaults ...
- scroll-up-aggressively 0               ;; ... are very ...
- scroll-down-aggressively 0             ;; ... annoying
- auto-window-vscroll nil)
+  ;; ;;Smooth keyboard scrolling
+  ;; (setq
+  ;;  redisplay-dont-pause t                 ;; scrolling
+  ;;  scroll-step 1                          ;; scroll line per line (1 line instead of 3)
+  ;;  scroll-margin 0                        ;; do smooth scrolling, ...
+  ;;  scroll-conservatively 100000           ;; ... the defaults ...
+  ;;  scroll-up-aggressively 0               ;; ... are very ...
+  ;;  scroll-down-aggressively 0             ;; ... annoying
+  ;;  auto-window-vscroll nil)
 #+END_SRC
 
 ** Menu Bar, Tool Bar & Scroll Bars
