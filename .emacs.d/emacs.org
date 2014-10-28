@@ -151,11 +151,9 @@ On startup, Emacs loads the file =init.el= located in the =~/.emacs.d/= director
 #+begin_src emacs-lisp
   (defvar use-home (expand-file-name "~"))
   (defvar use-home/site (expand-file-name "site" use-home))
-  (defvar use-home/bin (expand-file-name "bin" use-home))
 
   (add-to-list 'load-path use-home)  
   (add-to-list 'load-path use-home/site)
-  (add-to-list 'load-path use-home/bin)
 #+end_src
 
 ** Hunspell
@@ -165,48 +163,51 @@ On startup, Emacs loads the file =init.el= located in the =~/.emacs.d/= director
   (defvar use-hunspell 
     (when (file-directory-p (expand-file-name "hunspell" use-home/site))
       (expand-file-name "hunspell" use-home/site)))
+
+  ;(setenv "PATH" (concat (getenv "PATH") hunspell-path))
+  ;; Only set the path if it exists
+  (when use-hunspell
+    (add-to-list 'exec-path (expand-file-name "bin" use-hunspell) t))
 #+END_SRC
 
 ** exec/load paths
 #+begin_src emacs-lisp
-    ;; Add Windows paths to exec-path
-    (when mswindows-p
-      (add-to-list 'exec-path (expand-file-name "bin" (getenv "EMACS_DIR")))
-      (add-to-list 'exec-path "C:/Windows/system32")
-      (add-to-list 'exec-path "C:/Windows")
-      (add-to-list 'exec-path "C:/Program Files (x86)/Git/bin"))
+  ;; Add Windows paths to exec-path
+  (when mswindows-p
+    (add-to-list 'exec-path (expand-file-name "bin" (getenv "EMACS_DIR")) t)
+    (add-to-list 'exec-path "C:/Windows/system32" t)
+    (add-to-list 'exec-path "C:/Windows" t)
+    (add-to-list 'exec-path "C:/Program Files (x86)/Git/bin" t))
 
-    ;(setenv "PATH" (concat (getenv "PATH") hunspell-path))
-    ;; Only set the path if it exists
-    (when use-hunspell
-      (add-to-list 'exec-path (expand-file-name "bin" use-hunspell)))
+  ;; Check if path exists prior to adding to 'load-path
+  (mapc (lambda (arg)
+         (when (file-directory-p arg)
+           (add-to-list 'load-path arg t)))
+       (list
+        (expand-file-name "slime-master" use-home/site)
+        ;;(expand-file-name "auto-complete-master" use-home/site)
+        (expand-file-name "popup-el-master" use-home/site)
+        (expand-file-name "parenface-master" use-home/site)
+        (expand-file-name "emacs-color-theme-solarized-master" use-home/site)
+        (expand-file-name "dash.el-master" use-home/site)
+        (expand-file-name "smart-mode-line-master" use-home/site)
+        (expand-file-name "powerline-master" use-home/site)
+        (expand-file-name "company-mode-master" use-home/site)
+        (expand-file-name "magit-master" use-home/site)
+        (expand-file-name "git-modes-master" use-home/site)
+        (expand-file-name "rich-minority-master" use-home/site)
+        (expand-file-name "rainbow-delimiters-master" use-home/site)
+        (expand-file-name "highlight-sexp-master" use-home/site)
+        (expand-file-name "dired+" use-home/site)
+        ;;(expand-file-name "flycheck-master" use-home/site)
+        ;;(expand-file-name "aggressive-indent-mode-master" use-home/site)
+        ))
 
-    ;; Check if path exists prior to adding to 'load-path
-    (mapc (lambda (arg)
-           (when (file-directory-p arg)
-             (add-to-list 'load-path arg)))
-         (list
-          (expand-file-name "slime-master" use-home/site)
-          (expand-file-name "auto-complete-master" use-home/site)
-          (expand-file-name "popup-el-master" use-home/site)
-          (expand-file-name "parenface-master" use-home/site)
-          (expand-file-name "emacs-color-theme-solarized-master" use-home/site)
-          (expand-file-name "dash.el-master" use-home/site)
-          (expand-file-name "smart-mode-line-master" use-home/site)
-          (expand-file-name "powerline-master" use-home/site)
-          (expand-file-name "company-mode-master" use-home/site)
-          (expand-file-name "git-modes-master" use-home/site)
-          (expand-file-name "magit-master" use-home/site)
-          (expand-file-name "git-modes-master" use-home/site)
-          (expand-file-name "rich-minority-master" use-home/site)
-          (expand-file-name "rainbow-delimiters-master" use-home/site)
-          (expand-file-name "highlight-sexp-master" use-home/site)))
-
-    ;; See https://github.com/aki2o/org-ac
-    ;(add-to-list 'load-path (expand-file-name "auto-complete-pcmp" use-home/site))
-    ;(add-to-list 'load-path (expand-file-name "log4e" use-home/site))
-    ;(add-to-list 'load-path (expand-file-name "org-ac" use-home/site))
-    ;(add-to-list 'load-path (expand-file-name "yaxception" use-home/site))
+  ;; See https://github.com/aki2o/org-ac
+  ;(add-to-list 'load-path (expand-file-name "auto-complete-pcmp" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "log4e" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "org-ac" use-home/site))
+  ;(add-to-list 'load-path (expand-file-name "yaxception" use-home/site))
 #+end_src
 
 ** Color Theme
@@ -214,7 +215,7 @@ On startup, Emacs loads the file =init.el= located in the =~/.emacs.d/= director
     ;; Color theme
   (let ((dir (expand-file-name "themes" dotfiles-dir)))
     (when (file-directory-p dir)
-      (add-to-list 'custom-theme-load-path dir)))    
+      (add-to-list 'custom-theme-load-path dir t)))    
 #+END_SRC
 
 ** PlantUML
@@ -436,6 +437,7 @@ Make buffer names unique.
   (setq next-line-add-newlines nil) ;; Normally, C-n on the last line of a buffer appends a newline to it. 
                                     ;; If the variable next-line-add-newlines is nil, then C-n gets an error instead 
                                     ;; (like C-p on the first line).
+
 #+end_src
 
 ** EOL Behaviour
@@ -535,13 +537,14 @@ Make buffer names unique.
 
 ** Dired Customization
 File and directory management.
-http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html
+http://www.emacswiki.org/DiredPlus
 
 #+begin_src emacs-lisp
-  (require 'dired)
+  (setq diredp-hide-details-initially-flag nil)
+  (require 'dired+)
 
   ;; Using 'a' to open a directory in the same buffer
-  (put 'dired-find-alternative-file 'disabled nil)
+  ;;(put 'dired-find-alternative-file 'disabled nil)
 
   ;; Activate hl-line minor mode
   (add-hook 'dired-mode-hook
@@ -553,9 +556,11 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html
   (setq global-auto-revert-non-file-buffers t)
   (setq auto-revert-verbose nil)
 
+  (setq ls-lisp-dirs-first t) ; display dirs first in dired
+
   ;; Other
-  (setq dired-listing-switches "-l")
-  (when macosx-p (setq dired-use-ls-dired nil))
+  ;(setq dired-listing-switches "-l")
+  ;(when macosx-p (setq dired-use-ls-dired nil))
 #+end_src
 
 ** Modeline etc.
@@ -693,7 +698,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Dired.html
   ;(global-set-key [(control c) (tab)] 'pcomplete)
 #+end_src
 
-** OSX Key Overrides
+*** OSX Key Overrides
 M-x customize-group RET ns RET
 
 See http://emacsformacosx.com/tips
@@ -704,7 +709,7 @@ See http://emacsformacosx.com/tips
 
 ** OSX Customization
 #+BEGIN_SRC emacs-lisp
-  (when (boundp mac-allow-anti-aliasing) 
+  (when (boundp mac-allow-anti-aliasing)
     (setf mac-allow-anti-aliasing t))
 #+END_SRC
 ** Emacs Client                                                   :noexport:
@@ -836,7 +841,7 @@ http://stackoverflow.com/questions/145291/smart-home-in-emacs
     (add-hook 'eval-expression-minibuffer-setup-hook 'highlight-sexps-mode)
     (add-hook 'lisp-interaction-mode-hook 'highlight-sexps-mode)
     (add-hook 'slime-repl-mode-hook 'highlight-sexps-mode)
-    (setq hl-sexp-background-colors '("Gray10" "Gray40" "Gray50" "Gray60" "Gray70")))
+    (setq hl-sexp-background-colors '("Gray10" "Gray20")))
 
   ;; show-paren-mode allows one to see matching pairs of parentheses and other characters. 
   ;; When point is on one of the paired characters, the other is highlighted. 
@@ -982,7 +987,7 @@ http://bzg.fr/emacs-strip-tease.html
 
 #+END_SRC
 
-** Spelling
+** Spelling (Hunspell)
 #+BEGIN_SRC emacs-lisp
   ;; Replace ispell with hunspell
   (when (executable-find "hunspell")
@@ -1009,6 +1014,11 @@ http://bzg.fr/emacs-strip-tease.html
 (global-hl-line-mode t)
 #+END_SRC
 
+** Aggressive Indent Mode
+#+BEGIN_SRC emacs-lisp
+  ;;(require 'aggressive-indent)
+
+#+END_SRC
 * Version Control
 ** Ediff
 #+begin_src emacs-lisp
@@ -1020,15 +1030,19 @@ http://bzg.fr/emacs-strip-tease.html
 ** Magit
 https://github.comk/magit/magit
 #+begin_src emacs-lisp
-  (require 'git-commit-mode)
-  (require 'git-rebase-mode)
+  (eval-after-load 'info
+    '(progn (info-initialize)
+            (add-to-list 'Info-directory-list (expand-file-name "magit-master" use-home/site))))
+  ;;(require 'git-commit-mode)
+  ;;(require 'git-rebase-mode)
   (require 'magit)
-    
+
   (global-set-key [(control x) (g)] 'magit-status)
   (global-set-key (quote [f9]) 'magit-status)
 
   ;; This is here to stop the following error in Magit;
   ;; "The directory ~/.emacs.d/server is unsafe"
+  (require 'server)
   (and (>= emacs-major-version 23)
        (defun server-ensure-safe-dir (dir) "Noop" t))
 #+end_src
@@ -1265,9 +1279,10 @@ Enable automatic renumbering of footnotes
 
 ** Fontify source blocks in Latex
 #+BEGIN_SRC emacs-lisp
- (setq org-latex-listings t)
+ (require 'ox-latex)
+ ;(setq org-latex-listings t)
 
- (add-to-list 'org-latex-packages-alist '("" "listings"))
+ ;(add-to-list 'org-latex-packages-alist '("" "listings"))
 #+END_SRC
 
 ** Syntax highlight source blocks in the org buffer
@@ -1390,6 +1405,10 @@ Enable automatic renumbering of footnotes
   ;; (setf inferior-lisp-program (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64 " "-K utf-8 -tty"))
   ;(setf inferior-lisp-program (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64"))
   (setf inferior-lisp-program "/usr/local/bin/sbcl")
+  ;; (setq inferior-lisp-program (concat "~/lw-console.exe -init "
+  ;;                                     use-home
+  ;;                                     "/lispworks.lisp"))
+
   ;; (file-exists-p (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64"))
   (setf slime-net-coding-system 'utf-8-unix)
   (setf slime-contribs '(slime-fancy))
