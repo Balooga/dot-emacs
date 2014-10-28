@@ -1,3 +1,4 @@
 *.html
 emacs.el
 url/
+auto-save-list/
