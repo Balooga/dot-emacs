@@ -1,4 +1,6 @@
 *.html
 emacs.el
+luke.el
+*~
 url/
 auto-save-list/
