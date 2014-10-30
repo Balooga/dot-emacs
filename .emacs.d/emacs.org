@@ -1412,21 +1412,6 @@ Enable automatic renumbering of footnotes
   (setf slime-contribs '(slime-fancy))
 #+END_SRC
 
-* Startup Display
-** Maximize the Emacs Window on Startup
-#+begin_src emacs-lisp
-  ;; Bound to f11 in Emacs 24.4
-  (when (and (>= emacs-major-version 24)
-             (>= emacs-minor-version 4))
-    (toggle-frame-fullscreen))
-#+end_src
-** Open a directory screen
-#+begin_src emacs-lisp
-  ;;;;    Start Directory
-  ;(find-file use-git-repo)
-  (find-file use-home)
-#+end_src
-
 * Startup
 #+BEGIN_SRC emacs-lisp
   (setq inhibit-splash-screen t)
@@ -1442,6 +1427,21 @@ Enable automatic renumbering of footnotes
   (setq display-time-24hr-format t)
   (setq display-time-day-and-date t)
 #+END_SRC
+
+* Startup Display
+** Open a directory screen
+#+begin_src emacs-lisp
+  ;;;;    Start Directory
+  ;(find-file use-git-repo)
+  (find-file use-home)
+#+end_src
+** Maximize the Emacs Window on Startup
+#+begin_src emacs-lisp
+  ;; Bound to f11 in Emacs 24.4
+  (when (and (>= emacs-major-version 24)
+             (>= emacs-minor-version 4))
+    (toggle-frame-fullscreen))
+#+end_src
 * End timing .emacs load time
 #+BEGIN_SRC emacs-lisp
   (defvar *emacs-load-end* (current-time))
