@@ -1,0 +1,286 @@
+# -*- mode: org -*-
+# -*- coding: utf-8 -*-
+
+#+AUTHOR:    Luke Crook
+#+EMAIL:     luke@balooga.com
+
+#+TITLE:     Luke's .emacs file
+#+DATE:      [2014-10-07 Tue]
+
+* Naked Emacs
+  http://bzg.fr/emacs-strip-tease.html
+  #+BEGIN_SRC emacs-lisp
+  ;; You need to set `inhibit-startup-echo-area-message' from the
+  ;; customization interface:
+  ;; M-x customize-variable RET inhibit-startup-echo-area-message RET
+  ;; then enter your username
+  ;;(setq inhibit-startup-echo-area-message "guerry")
+
+  ;; Remove the toolbar
+  (tool-bar-mode 0)
+
+  ;; Turn of the menu bar
+  (menu-bar-mode 0)
+
+  ;; Turn off the scroll bar
+  (scroll-bar-mode 0)
+
+  ;; See http://bzg.fr/emacs-hide-mode-line.html
+  (defvar-local hidden-mode-line-mode nil)
+  (defvar-local hide-mode-line nil)
+
+  (define-minor-mode hidden-mode-line-mode
+    "Minor mode to hide the mode-line in the current buffer."
+    :init-value nil
+    :global nil
+    :variable hidden-mode-line-mode
+    :group 'editing-basics
+    (if hidden-mode-line-mode
+        (setq hide-mode-line mode-line-format
+              mode-line-format nil)
+      (setq mode-line-format hide-mode-line
+            hide-mode-line nil))
+    (force-mode-line-update)
+    ;; Apparently force-mode-line-update is not always enough to
+    ;; redisplay the mode-line
+    (redraw-display)
+    (when (and (called-interactively-p 'interactive)
+               hidden-mode-line-mode)
+      (run-with-idle-timer
+       0 nil 'message
+       (concat "Hidden Mode Line Mode enabled.  "
+               "Use M-x hidden-mode-line-mode to make the mode-line appear."))))
+
+  ;; Command to toggle the display of the mode-line as a header
+  (defvar-local header-line-format nil)
+  (defun mode-line-in-header ()
+    (interactive)
+    (if (not header-line-format)
+        (setq header-line-format mode-line-format
+              mode-line-format nil)
+      (setq mode-line-format header-line-format
+            header-line-format nil))
+    (set-window-buffer nil (current-buffer)))
+  (global-set-key (kbd "C-s-SPC") 'mode-line-in-header)
+
+  ;; Activate hidden-mode-line-mode
+  (hidden-mode-line-mode 1)
+
+  ;; A small minor mode to use a big fringe
+  (defvar bzg-big-fringe-mode nil)
+  (define-minor-mode bzg-big-fringe-mode
+    "Minor mode to use big fringe in the current buffer."
+    :init-value nil
+    :global t
+    :variable bzg-big-fringe-mode
+    :group 'editing-basics
+    (if (not bzg-big-fringe-mode)
+        (set-fringe-style nil)
+      (set-fringe-mode
+       (/ (- (frame-pixel-width)
+             (* 100 (frame-char-width)))
+          2))))
+
+  ;; Now activate this global minor mode
+  (bzg-big-fringe-mode 0)
+
+  ;; To activate the fringe by default and deactivate it when windows
+  ;; are split vertically, uncomment this:
+  ;; (add-hook 'window-configuration-change-hook
+  ;;           (lambda ()
+  ;;             (if (delq nil
+  ;;                       (let ((fw (frame-width)))
+  ;;                         (mapcar (lambda(w) (< (window-width w) fw))
+  ;;                                 (window-list))))
+  ;;                 (bzg-big-fringe-mode 0)
+  ;;               (bzg-big-fringe-mode 1))))
+
+  ;; Get rid of the indicators in the fringe
+  (mapcar (lambda(fb) (set-fringe-bitmap-face fb 'org-hide))
+          fringe-bitmaps)
+
+  ;; Set the color of the fringe
+  ;;(custom-set-faces
+  ;; '(fringe ((t (:background "white")))))
+   
+  ;;(custom-set-faces
+  ;;  '(default ((t (:background "black" :foreground "grey"))))
+  ;;  '(fringe ((t (:background "black")))))
+
+#+END_SRC
+
+
+* Aggressive Indent Mode
+#+BEGIN_SRC emacs-lisp
+  ;;(require 'aggressive-indent)
+
+#+END_SRC
+
+
+
+* Common Lisp Editing
+** Associate ASDF File Extensions to Major Modes
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.asd$" . lisp-mode)) ;; Allow ASDF files to be edited as lisp files
+#+end_src
+
+** Paredit
+#+BEGIN_SRC emacs-lisp
+  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  (add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook 'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+  (add-hook 'slime-repl-mode-hook 'enable-paredit-mode)
+
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "[") 'paredit-open-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "]") 'paredit-close-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "M-[") 'paredit-wrap-round))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "(") 'paredit-open-square))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd ")") 'paredit-close-square))
+
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "C-c C-f") 'paredit-forward))
+  (eval-after-load 'paredit
+    '(define-key paredit-mode-map (kbd "C-c C-b") 'paredit-backward))
+
+#+END_SRC
+
+** Highlighting Parenthesis
+#+BEGIN_SRC emacs-lisp
+  ;;  M-x list-colors-display 
+
+  (when nil
+    (require 'highlight-sexps) ;; Highlights the nested expressions surrounding the point
+    (autoload 'highlight-sexps-mode "highlight-sexps-mode" "Turn on highlighting of sexps." t)
+    (add-hook 'lisp-mode-hook 'highlight-sexps-mode)
+    (add-hook 'emacs-lisp-mode-hook 'highlight-sexps-mode)
+    (add-hook 'eval-expression-minibuffer-setup-hook 'highlight-sexps-mode)
+    (add-hook 'lisp-interaction-mode-hook 'highlight-sexps-mode)
+    (add-hook 'slime-repl-mode-hook 'highlight-sexps-mode)
+    (setq hl-sexp-background-colors '("Gray10" "Gray20")))
+
+  ;; show-paren-mode allows one to see matching pairs of parentheses and other characters. 
+  ;; When point is on one of the paired characters, the other is highlighted. 
+  (when nil
+    (show-paren-mode 0)
+    (setq show-paren-style 'expression))  ; 'parenthesis highlight just brackets
+                                          ; 'expression highlight entire bracket expression
+  (when nil
+    (require 'parenface) ; Dims parenthesis
+    (eval-after-load 'parenface
+      (progn
+        (set-face-foreground 'parenface-paren-face "SteelBlue4")
+        (set-face-foreground 'parenface-bracket-face "SteelBlue4")
+        (set-face-foreground 'parenface-curly-face "SteelBlue4"))))
+
+  (when t
+    (require 'rainbow-delimiters) ;; highlights parens, brackets, and braces according to their depth
+    ;; (add-hook 'prog-mode-hook 'rainbow-delimiters-mode) ; Add to all programming modes
+    (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
+    (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+    (add-hook 'eval-expression-minibuffer-setup-hook 'rainbow-delimiters-mode)
+    (add-hook 'lisp-interaction-mode-hook 'rainbow-delimiters-mode)
+    (add-hook 'slime-repl-mode-hook 'rainbow-delimiters-mode))
+
+  (when t
+    (require 'highlight-sexp) ;; Highlights the sexp at the current position
+    (add-hook 'lisp-mode-hook 'highlight-sexp-mode)
+    (add-hook 'emacs-lisp-mode-hook 'highlight-sexp-mode)
+    (add-hook 'eval-expression-minibuffer-setup-hook 'highlight-sexp-mode)
+    (add-hook 'lisp-interaction-mode-hook 'highlight-sexp-mode)
+    (add-hook 'slime-repl-mode-hook 'highlight-sexp-mode))
+#+END_SRC
+
+
+* Slime
+#+BEGIN_SRC emacs-lisp
+  ;; Setup autoloads
+  (require 'slime-autoloads)
+
+  ;; Set your lisp system and some contribs
+  ;; (setq inferior-lisp-program (concat "~/lw-console.exe -init "
+  ;;                                     use-home
+  ;;                                     "/lispworks.lisp"))
+  ;; (setf inferior-lisp-program (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64 " "-K utf-8 -tty"))
+  ;(setf inferior-lisp-program (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64"))
+  (setf inferior-lisp-program "/usr/local/bin/sbcl")
+  ;; (setq inferior-lisp-program (concat "~/lw-console.exe -init "
+  ;;                                     use-home
+  ;;                                     "/lispworks.lisp"))
+
+  ;; (file-exists-p (concat "/Applications/Clozure CL.app/Contents/MacOS/dx86cl64"))
+  (setf slime-net-coding-system 'utf-8-unix)
+  (setf slime-contribs '(slime-fancy))
+#+END_SRC
+
+
+* Org Publishing
+** Jekyll configuration
+#+BEGIN_SRC emacs-lisp
+  (setq org-publish-project-alist 
+        '(
+          ("org-balooga"
+           ;; Path to your org files.
+           :base-directory "~/blog/org/"
+           :base-extension "org"
+
+           ;; Path to your Jekyll project.
+           :publishing-directory "~/blog/balooga/"
+           :recursive t
+           :publishing-function org-html-publish-to-html
+           :headline-levels 4 
+           :html-extension "html"
+           :body-only t ;; Only export section between <body> </body>
+           )
+
+
+          ("org-static-blaooga"
+           :base-directory "~/blog/org/"
+           :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php"
+           :publishing-directory "~/blog/"
+           :recursive t
+           :publishing-function org-publish-attachment)
+
+          ("balooga" :components ("org-balooga" "org-static-balooga"))
+
+          ))
+#+END_SRC
+    
+
+* Color Theme
+Themes include;
+
+| adwaita    | deeper-blue | dichromacy      | light-blue       |
+| manoj-dark | misterioso  | solarized-dark* | solarized-light* |
+| tango      | tango-dark  | tsdh-dark       | tsdh-light       |
+| wheatgrass | whiteboard  | wombat          | zenburn          |
+
+ * Not distributed as part of Emacs, but a nice theme anyway.
+   
+ https://github.com/bbatsov/solarized-emacs
+ 
+ #+begin_src emacs-lisp
+   ;(load-theme 'manoj-dark t)
+   (load-theme 'zenburn t)
+   ;(load-theme 'whiteboard t)
+ #+end_src
+ 
+
+* Highlight cursor line
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t)
+#+END_SRC
+
+* Customize                                                :noexport:ARCHIVE:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+** Startup/Options
+#+STARTUP:   content oddeven lognotedone indent align
+#+OPTIONS:   author:t creator:nil timestamp:t email:t
