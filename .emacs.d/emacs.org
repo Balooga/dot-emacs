@@ -442,7 +442,8 @@ Make buffer names unique.
 
 ** EOL Behaviour
 #+BEGIN_SRC emacs-lisp
-  ;;(setq inhibit-eol-conversion t) ; This makes the windows EOL character ^M appear in the buffer
+  ;; This makes the windows EOL character ^M appear in the buffer
+  ;;(setq inhibit-eol-conversion t) 
 #+END_SRC
 
 ** Scrolling
@@ -511,8 +512,14 @@ Make buffer names unique.
     (setq x-select-enable-clipboard t))
 #+end_src
 
-** Cursor Colors
+** Cursor
 #+begin_src emacs-lisp
+  ;; Prevent the cursor from blinking
+  (blink-cursor-mode 0)
+
+  ;; Use a minimal cursor
+  (setq default-cursor-type 'hbar)
+
   ;; This requires (cua-mode t), set previously.
   (setq cua-enable-cursor-indications t)  ; Enable the cursor indications
   (setq cua-normal-cursor-color "orange") ; The following will use a ORANGE cursor 
@@ -876,17 +883,42 @@ http://stackoverflow.com/questions/145291/smart-home-in-emacs
     (add-hook 'slime-repl-mode-hook 'highlight-sexp-mode))
 #+END_SRC
 
-** Naked Emacs
-http://bzg.fr/emacs-strip-tease.html
-
+** Spelling (Hunspell)
 #+BEGIN_SRC emacs-lisp
+  ;; Replace ispell with hunspell
+  (when (executable-find "hunspell")
+    (setq-default ispell-program-name "hunspell")
+    (setq ispell-really-hunspell t)
+    ;;(setq ispell-extra-args '("-a" "-i" "utf-8"))
+    (setq ispell-extra-args '("-i" "utf-8"))
+    ;;(setq ispell-extra-args nil)
+    (setq ispell-local-dictionary-alist (list 
+                                         (list "american-hunspell"
+                                               "[[:alpha:]]"
+                                               "[^[:alpha:]]"
+                                               "[']"
+                                               t
+                                               (list "-d" 
+                                                     (expand-file-name "dict/en_US" 
+                                                                       use-hunspell))
+                                               nil
+                                               'utf-8)))
+    (setq ispell-dictionary "american-hunspell"))
+#+END_SRC
+** Highlight cursor line
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t)
+#+END_SRC
 
-  ;; Prevent the cursor from blinking
-  (blink-cursor-mode 0)
+** Aggressive Indent Mode
+#+BEGIN_SRC emacs-lisp
+  ;;(require 'aggressive-indent)
 
-  ;; Use a minimal cursor
-  (setq default-cursor-type 'hbar)
+#+END_SRC
 
+* Naked Emacs
+http://bzg.fr/emacs-strip-tease.html
+#+BEGIN_SRC emacs-lisp
   ;; You need to set `inhibit-startup-echo-area-message' from the
   ;; customization interface:
   ;; M-x customize-variable RET inhibit-startup-echo-area-message RET
@@ -906,27 +938,27 @@ http://bzg.fr/emacs-strip-tease.html
   (defvar-local hidden-mode-line-mode nil)
   (defvar-local hide-mode-line nil)
 
-    (define-minor-mode hidden-mode-line-mode
-      "Minor mode to hide the mode-line in the current buffer."
-      :init-value nil
-      :global nil
-      :variable hidden-mode-line-mode
-      :group 'editing-basics
-      (if hidden-mode-line-mode
-          (setq hide-mode-line mode-line-format
-                mode-line-format nil)
-        (setq mode-line-format hide-mode-line
-              hide-mode-line nil))
-      (force-mode-line-update)
-      ;; Apparently force-mode-line-update is not always enough to
-      ;; redisplay the mode-line
-      (redraw-display)
-      (when (and (called-interactively-p 'interactive)
-                 hidden-mode-line-mode)
-        (run-with-idle-timer
-         0 nil 'message
-         (concat "Hidden Mode Line Mode enabled.  "
-                 "Use M-x hidden-mode-line-mode to make the mode-line appear."))))
+  (define-minor-mode hidden-mode-line-mode
+    "Minor mode to hide the mode-line in the current buffer."
+    :init-value nil
+    :global nil
+    :variable hidden-mode-line-mode
+    :group 'editing-basics
+    (if hidden-mode-line-mode
+        (setq hide-mode-line mode-line-format
+              mode-line-format nil)
+      (setq mode-line-format hide-mode-line
+            hide-mode-line nil))
+    (force-mode-line-update)
+    ;; Apparently force-mode-line-update is not always enough to
+    ;; redisplay the mode-line
+    (redraw-display)
+    (when (and (called-interactively-p 'interactive)
+               hidden-mode-line-mode)
+      (run-with-idle-timer
+       0 nil 'message
+       (concat "Hidden Mode Line Mode enabled.  "
+               "Use M-x hidden-mode-line-mode to make the mode-line appear."))))
 
   ;; Command to toggle the display of the mode-line as a header
   (defvar-local header-line-format nil)
@@ -939,7 +971,6 @@ http://bzg.fr/emacs-strip-tease.html
             header-line-format nil))
     (set-window-buffer nil (current-buffer)))
   (global-set-key (kbd "C-s-SPC") 'mode-line-in-header)
-
 
   ;; Activate hidden-mode-line-mode
   (hidden-mode-line-mode 1)
@@ -984,39 +1015,6 @@ http://bzg.fr/emacs-strip-tease.html
   ;;(custom-set-faces
   ;;  '(default ((t (:background "black" :foreground "grey"))))
   ;;  '(fringe ((t (:background "black")))))
-
-#+END_SRC
-
-** Spelling (Hunspell)
-#+BEGIN_SRC emacs-lisp
-  ;; Replace ispell with hunspell
-  (when (executable-find "hunspell")
-    (setq-default ispell-program-name "hunspell")
-    (setq ispell-really-hunspell t)
-    ;;(setq ispell-extra-args '("-a" "-i" "utf-8"))
-    (setq ispell-extra-args '("-i" "utf-8"))
-    ;;(setq ispell-extra-args nil)
-    (setq ispell-local-dictionary-alist (list 
-                                         (list "american-hunspell"
-                                               "[[:alpha:]]"
-                                               "[^[:alpha:]]"
-                                               "[']"
-                                               t
-                                               (list "-d" 
-                                                     (expand-file-name "dict/en_US" 
-                                                                       use-hunspell))
-                                               nil
-                                               'utf-8)))
-    (setq ispell-dictionary "american-hunspell"))
-#+END_SRC
-** Highlight cursor line
-#+BEGIN_SRC emacs-lisp
-(global-hl-line-mode t)
-#+END_SRC
-
-** Aggressive Indent Mode
-#+BEGIN_SRC emacs-lisp
-  ;;(require 'aggressive-indent)
 
 #+END_SRC
 * Version Control
