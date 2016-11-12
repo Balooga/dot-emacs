@@ -214,9 +214,9 @@ All Emacs Lisp files there are loaded automatically.")
 
 (when (display-graphic-p)
   ;; This kind of stuff is set via customize
-  ;;(tool-bar-mode -1) ;; Remove the toolbar
-  ;;(menu-bar-mode -1)  ;; Turn of the menu bar
-  ;;(scroll-bar-mode -1) ;; Turn off the scroll bar
+  (tool-bar-mode -1) ;; Remove the toolbar
+  (menu-bar-mode -1)  ;; Turn of the menu bar
+  (scroll-bar-mode -1) ;; Turn off the scroll bar
   (tooltip-mode -1)
 
   (setq-default tooltip-delay 3.0
@@ -889,6 +889,7 @@ Depending on whether or not a region is selected."
 
 (use-package puml-mode  
   ;;https://github.com/skuro/puml-mode
+  :disabled t
   :ensure t
   :defer t
   ;; :mode (("\\.puml\\'" . puml-mode)
