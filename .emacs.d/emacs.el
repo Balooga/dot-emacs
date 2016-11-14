@@ -1155,17 +1155,26 @@ Depending on whether or not a region is selected."
                'append))
 
 (defvar use-spellcheck
-  "Set the spell check back-end to use."
+  ;;'auto
   ;;'hunspell
-  ;;'aspell
-  'auto)
+  'aspell
+  "Set the spell check back-end to use.")
+
+(when (eq use-spellcheck 'auto)
+  (or (when (executable-find "hunspell")
+        (setq use-spellcheck 'hunspell))
+      (when (executable-find "aspell")
+        (setq use-spellcheck 'aspell))))
 
 (defvar personal-dict "personal-dict.en")
 
 (use-package flyspell
   :ensure t
   :defer t
-  :if (or (executable-find "hunspell") (executable-find "ispell"))
+  :if (or (when (eq use-spellcheck 'hunspell)
+            (executable-find "hunspell"))
+          (when (eq use-spellcheck 'aspell)
+            (executable-find "aspell")))
   :diminish (flyspell-mode "Spell")
   :init
   (add-hook 'prog-mode-hook #'flyspell-prog-mode 'append)
@@ -1214,11 +1223,11 @@ Depending on whether or not a region is selected."
        ispell-program-name "aspell"
        ;; http://aspell.net/man-html/Notes-on-the-Different-Suggestion-Modes.html#Notes-on-the-Different-Suggestion-Modes
        ispell-extra-args '("--sug-mode=slow" "--lang=en_US")
-       ispell-list-command "--list")))
+       ispell-list-command "--list"))))
 
-    ((eq use-spellcheck 'hunspell)
-     (setq-default
-      ispell-program-name "hunspell")
+   ((eq use-spellcheck 'hunspell)
+    (setq-default
+     ispell-program-name "hunspell"
      ispell-really-hunspell t))
 
    ((eq use-spellcheck 'aspell)
@@ -1244,14 +1253,14 @@ Depending on whether or not a region is selected."
     ;; brew install languagetool
     ;; which languagetool # to determine path to script
     ;; less /path/to/languagetool # to determine path to languagetool-commandline.jar
-    :if osx-p
+    :if (and osx-p
+             (file-exists-p "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar"))
     :ensure t
     :defer t
     ;; :init (add-hook 'text-mode-hook #'langtool-check 'append) 
     :config
-    ;;(file-exists-p "/usr/local/Cellar/languagetool/3.2/libexec/languagetool-commandline.jar")
     (setq-default
-     langtool-language-tool-jar "/usr/local/Cellar/languagetool/3.2/libexec/languagetool-commandline.jar"
+     langtool-language-tool-jar "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar"
      langtool-mother-tongue "en-US"
      langtool-disabled-rules '("WHITESPACE_RULE"
                                "EN_UNPAIRED_BRACKETS"
