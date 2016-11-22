@@ -68,6 +68,10 @@ All Emacs Lisp files there are loaded automatically.")
 (unless (getenv "PLANTUML_JAR")
   (setenv "PLANTUML_JAR" plantuml-jar-path))
 
+(defvar dot-shared-directory (if (file-exists-p "~/Google Drive/notes")
+                                 "~/Google Drive/notes"
+                               nil))
+
 (when win32-p
   (add-to-list 'load-path dotfiles/win32-bin-dir 'append)
   
@@ -299,8 +303,12 @@ Depending on whether or not a region is selected."
   (unless (display-graphic-p)
     (set-keyboard-coding-system nil))
 
-  ;; Do not create a new workspace on OSX when going full-screen
-  (setq ns-use-native-fullscreen nil))
+  ;; Suppress new workspace on OSX when going full-screen
+  (when (boundp 'ns-use-native-fullscreen)
+    (setq ns-use-native-fullscreen nil))
+
+  (when (boundp 'ns-auto-hide-menu-bar)
+    (setq ns-auto-hide-menu-bar t)))
 
 (setq inhibit-splash-screen t)
 ;;(setq initial-scratch-message nil)
@@ -739,36 +747,45 @@ Depending on whether or not a region is selected."
 (use-package deft
   ;;https://github.com/jrblevin/deft
   :ensure t
+  :bind (("C-x d" . deft))
   :commands deft
   :defer t
   :config
-  (setq deft-extensions '("txt" "tex" "org" "rst")
-        deft-directory "~/Documents/EDS/eds_tasks"
-        deft-recursive t))
+  (add-to-list 'auto-mode-alist '("/notes/.*\\.txt\\'" . markdown-mode))
+  (setq deft-extensions '("txt" "org" "rst" "tex")
+        deft-recursive t)
+  (setf deft-directory
+        (cond
+         ((file-exists-p dot-shared-directory)
+          dot-shared-directory)
+         ((file-exists-p "~/Documents/EDS/eds_tasks")
+          "~/Documents/EDS/eds_tasks")
+         ((file-exists-p "~/.deft")
+          "~/.deft"))))
 
-(use-package popup
-  :disabled t
-  :ensure t
-  :defer t
-  ;; :bind (("C-c C-f" . describe-thing-in-popup))
-  :config
-  ;;http://blog.jenkster.com/2013/12/popup-help-in-emacs-lisp.html
-  ;; (defun describe-thing-in-popup ()
-  ;;   (interactive)
-  ;;   (let* ((thing (symbol-at-point))
-  ;;          (help-xref-following t)
-  ;;          (description (save-window-excursion
-  ;;                         (with-temp-buffer
-  ;;                           (help-mode)
-  ;;                           (help-xref-interned thing)
-  ;;                           (buffer-string)))))
-  ;;     (popup-tip description
-  ;;                :point (point)
-  ;;                :around t
-  ;;                :height 30
-  ;;                :scroll-bar t
-  ;;                :margin t)))
-  )
+  (use-package popup
+    :disabled t
+    :ensure t
+    :defer t
+    ;; :bind (("C-c C-f" . describe-thing-in-popup))
+    :config
+    ;;http://blog.jenkster.com/2013/12/popup-help-in-emacs-lisp.html
+    ;; (defun describe-thing-in-popup ()
+    ;;   (interactive)
+    ;;   (let* ((thing (symbol-at-point))
+    ;;          (help-xref-following t)
+    ;;          (description (save-window-excursion
+    ;;                         (with-temp-buffer
+    ;;                           (help-mode)
+    ;;                           (help-xref-interned thing)
+    ;;                           (buffer-string)))))
+    ;;     (popup-tip description
+    ;;                :point (point)
+    ;;                :around t
+    ;;                :height 30
+    ;;                :scroll-bar t
+    ;;                :margin t)))
+    )
 
 ;; http://www.emacswiki.org/EmacsClient
 ;; http://www.emacswiki.org/emacs/EmacsMsWindowsIntegration
