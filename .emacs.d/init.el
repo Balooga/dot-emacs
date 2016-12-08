@@ -49,14 +49,15 @@
 (require 'diminish) ;;https://github.com/myrjola/diminish.el
 (setq use-package-verbose t) ;;Set to t for performance profiling
 
-(defvar load-org-emacs-config 'el)
-(cond
- ((and (eq load-org-emacs-config 'org)
-       (file-exists-p (expand-file-name "emacs.org" user-emacs-directory)) )
-  (org-babel-load-file (expand-file-name "emacs.org" user-emacs-directory)))
+(defun dot-load-emacs (type)
+  (cond
+   ((and (eq type 'org)
+         (file-exists-p (expand-file-name "emacs.org" user-emacs-directory)))
+    (org-babel-load-file (expand-file-name "emacs.org" user-emacs-directory)))
+   
+   ((and (eq type 'el)
+         (file-exists-p (expand-file-name "emacs.el" user-emacs-directory)))
+    (load (expand-file-name "emacs.el" user-emacs-directory) 'noerror))))
 
- ((and (eq load-org-emacs-config 'el)
-       (file-exists-p (expand-file-name "emacs.el" user-emacs-directory)))
-  (load (expand-file-name "emacs.el" user-emacs-directory) 'noerror)))
-
+(dot-load-emacs 'org)
 ;;; init.el ends here
