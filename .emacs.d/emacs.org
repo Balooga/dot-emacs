@@ -86,7 +86,11 @@
 * Keyboard mappings
 #+BEGIN_SRC emacs-lisp
   (defvar dot-keyboard-type
-    'mac
+    (cond
+     (osx-p
+      'mac)
+     (t
+      'win))
     ;;'ergodox
     ;;'hhbk
     )
