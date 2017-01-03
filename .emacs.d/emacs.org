@@ -339,16 +339,17 @@
 ** Scrolling
 #+BEGIN_SRC emacs-lisp
   ;; Smooth keyboard scrolling
-  (setq-default scroll-conservatively 100000
-                ;; redisplay-dont-pause t    ;Obsolete since 24.5
-                scroll-margin 0              ;do smooth scrolling, ...
-                scroll-preserve-screen-position 1
-                scroll-up-aggressively 0.01
-                scroll-down-aggressively 0.01
-                auto-window-vscroll nil
-                ;; scroll-step 1 ;Leave Emacs defaults
-                ;; next-screen-context-lines 2 ;Leave Emacs defaults
-                scroll-error-top-bottom t)
+  (when t
+    (setq-default scroll-conservatively 100000
+                  ;; redisplay-dont-pause t    ;Obsolete since 24.5
+                  scroll-margin 0              ;do smooth scrolling, ...
+                  scroll-preserve-screen-position 1
+                  scroll-up-aggressively 0.01
+                  scroll-down-aggressively 0.01
+                  auto-window-vscroll nil
+                  ;; scroll-step 1 ;Leave Emacs defaults
+                  ;; next-screen-context-lines 2 ;Leave Emacs defaults
+                  scroll-error-top-bottom t))
 #+END_SRC
 
 ** Customize Mode line
@@ -364,7 +365,7 @@
 
 ** Naked Emacs
 #+BEGIN_SRC emacs-lisp
-  (when (display-graphic-p)
+  (when t ;;(display-graphic-p)
     ;; This kind of stuff is set via customize
     (tool-bar-mode -1) ;; Remove the toolbar
     (menu-bar-mode -1)  ;; Turn of the menu bar
@@ -1099,1325 +1100,1351 @@
 
 * Packages
 #+BEGIN_SRC emacs-lisp
-  (use-package dash
-    ;;A modern list api for Emacs
-    ;;https://github.com/magnars/dash.el
-    :ensure t
-    :config (dash-enable-font-lock))
+(use-package dash
+  ;;A modern list api for Emacs
+  ;;https://github.com/magnars/dash.el
+  :ensure t
+  :config (dash-enable-font-lock))
 
-  (use-package names
-    ;;Namespaces for Emacs. https://github.com/Malabarba/names/
+(use-package names
+  ;;Namespaces for Emacs. https://github.com/Malabarba/names/
+  :ensure t) 
+
+(use-package exec-path-from-shell
+  ;;https://github.com/purcell/exec-path-from-shell
+  :if osx-p ;;(memq window-system '(mac ns))
+  :ensure t
+  :config (exec-path-from-shell-initialize))
+
+(use-package recentf ;; http://www.emacswiki.org/RecentFiles
+  :ensure t
+  :bind (("C-x C-r" . helm-recentf)
+         ("C-x f" . helm-recentf))
+  :config (recentf-mode 1))
+
+(use-package flycheck ;;https://github.com/flycheck/flycheck  
+  :if osx-p
+  :ensure t
+  :defer t
+  ;;  :diminish (flycheck-mode "Fly")
+  :init (add-hook 'prog-mode-hook #'flycheck-mode 'append)
+  :config
+  ;; (setq-default flycheck-highlighting-mode 'lines)
+  ;;                         '(columns symbols sexps lines))
+  (setq-default flycheck-indication-mode 'right-fringe))
+
+(use-package diff-hl
+  :if (and osx-p (display-graphic-p)) ;;Broken windows  
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'diff-hl-mode 'append)
+  (add-hook 'org-mode-hook #'diff-hl-mode 'append)
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)
+  :config
+  (diff-hl-mode)
+  (unless osx-p ;; Disabled in osx due to an issue with Magit
+    (diff-hl-flydiff-mode t)))
+
+(use-package dired
+  :defer t
+  :config
+  (add-hook 'dired-mode-hook #'hl-line-mode)
+  (add-hook 'dired-mode-hook #'stripe-listify-buffer) 
+  (setq dired-listing-switches "-l")
+  (when osx-p (setq dired-use-ls-dired nil))
+  (use-package stripe-buffer ;;https://github.com/sabof/stripe-buffer
+    :ensure t))
+
+(use-package dired+
+  ;; http://www.emacswiki.org/DiredPlus
+  :disabled t
+  :ensure t
+  :defer t
+  :bind (("C-x C-d" . ido-dired))
+  :init
+  ;; Must be set prior to loading dired+
+  (setq diredp-hide-details-initially-flag nil)
+  ;; Activate hl-line minor mode
+  (add-hook 'dired-mode-hook #'hl-line-mode)
+  :config
+  ;; Using 'a' to open a directory in the same buffer
+  ;;(put 'dired-find-alternative-file 'disabled nil)  
+
+  ;; Refresh also dired buffer
+  ;; From Magnars blog
+  (setq global-auto-revert-non-file-buffers t)
+  (setq auto-revert-verbose nil)
+
+  ;; Other
+  (setq dired-listing-switches "-l")
+  (when osx-p (setq dired-use-ls-dired nil)))
+
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1)
+  ;; (add-hook 'prog-mode-hook #'yas-minor-mode)
+  :commands (yas-minor-mode yas-global-mode)
+  :defer t
+  :mode ("\\.yasnippet" . snippet-mode)
+  :config (yas-reload-all)
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+
+;;https://github.com/jorgenschaefer/typoel
+(use-package typo
+  :disabled t
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'text-mode-hook #'typo-mode))
+
+(use-package hl-sentence
+  :ensure t
+  :defer t
+  :if (display-graphic-p)
+  :init
+  (add-hook 'text-mode-hook #'hl-sentence-mode)
+  :config
+  (set-face-attribute 'hl-sentence-face nil
+                      ;; :foreground "black")
+                      :foreground "white"))
+
+(use-package deft
+  ;;https://github.com/jrblevin/deft
+  :ensure t
+  :bind (("C-x C-d" . deft))
+  :commands deft
+  :defer t
+  :config
+  (add-to-list 'auto-mode-alist '("/notes/.*\\.txt\\'" . markdown-mode))
+  (setq deft-extensions '("txt" "org" "rst" "tex")
+        deft-recursive t)
+  (setf deft-directory
+        (cond
+         ((file-exists-p dot-shared-directory)
+          dot-shared-directory)
+         ((file-exists-p "~/Documents/EDS/eds_tasks")
+          "~/Documents/EDS/eds_tasks")
+         ((file-exists-p "~/.deft")
+          "~/.deft"))))
+
+(use-package popup
+  :disabled t
+  :ensure t
+  :defer t
+  ;; :bind (("C-c C-f" . describe-thing-in-popup))
+  :config
+  ;;http://blog.jenkster.com/2013/12/popup-help-in-emacs-lisp.html
+  ;; (defun describe-thing-in-popup ()
+  ;;   (interactive)
+  ;;   (let* ((thing (symbol-at-point))
+  ;;          (help-xref-following t)
+  ;;          (description (save-window-excursion
+  ;;                         (with-temp-buffer
+  ;;                           (help-mode)
+  ;;                           (help-xref-interned thing)
+  ;;                           (buffer-string)))))
+  ;;     (popup-tip description
+  ;;                :point (point)
+  ;;                :around t
+  ;;                :height 30
+  ;;                :scroll-bar t
+  ;;                :margin t)))
+  )
+
+;; http://www.emacswiki.org/EmacsClient
+;; http://www.emacswiki.org/emacs/EmacsMsWindowsIntegration
+
+;;(setenv "CVS_RSH" "ssh")
+
+;; User rights on Windows don't seem to allow this.
+;; emacsclientw.exe -na runemacs.exe -c
+;;(setenv "EDITOR" (executable-find "emacsclientw.exe"))
+
+;; This is here to stop the following error in Magit;
+;;
+;; "The directory ~/.emacs.d/server is unsafe"
+;;
+;; Probably because ~/.emacs.d/ is a symlink
+;; Emacs server
+(use-package server
+  :if nil
+  :ensure t
+  :defer 5
+  :config
+  (when win32-p
+    (setq-default server-auth-dir (expand-file-name "server" use-home))
+    (and (>= emacs-major-version 23)
+         (defun server-ensure-safe-dir (dir) "Noop" t))
+    (unless (file-exists-p server-auth-dir)
+      (make-directory server-auth-dir)))
+  (unless (server-running-p)
+    (server-start)))
+
+;;(require 'server)
+;;(when (and (eq window-system 'w32) (file-exists-p (getenv "APPDATA")))
+;;  (setq server-auth-dir (concat (getenv "APPDATA") "\\.emacs.d"))
+;;  (unless (file-exists-p server-auth-dir)
+;;    (make-directory server-auth-dir)))
+;;(server-start)
+
+(use-package uniquify
+  ;;http://www.emacswiki.org/emacs/uniquify
+  :config
+  ;; Use pathnames instead of <n> to uniquify buffer names
+  ;;(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+  (setq-default
+   uniquify-buffer-name-style 'reverse
+   uniquify-separator "|"
+   uniquify-after-kill-buffer-p t ; rename after killing "uniquified" buffer
+   uniquify-ignore-buffers-re "^\\*" ; don't muck with special buffers
+   ))
+
+(use-package whitespace
+  ;; http://emacswiki.org/emacs/WhiteSpace
+  :ensure t
+  :defer t
+  :init (add-hook 'prog-mode-hook #'whitespace-mode)
+  :config
+  (setq-default whitespace-style '(
+                                   face
+                                   ;;empty
+                                   ;;tabs
+                                   lines-tail
+                                   ;;trailing
+                                   ;;newline
+                                   ))
+  (setq-default indicate-buffer-boundaries 'right
+                ;;indicate-empty-lines t ;; Indicate empty lines
+                whitespace-line-column 80))
+
+(use-package markdown-mode
+  ;; http://jblevins.org/projects/markdown-mode/
+  :ensure t
+  :mode (("\\`README\\.md\\'" . gfm-mode)
+         ("\\.md\\'"          . markdown-mode)
+         ("\\.markdown\\'"    . markdown-mode))
+  :config
+  ;;(add-hook 'markdown-mode-hook (lambda () (variable-pitch-mode t)))
+
+  (use-package markdown-toc
+    :ensure t)
+
+  ;;(add-hook 'markdown-mode-hook 'gfm-mode)
+  (add-hook 'markdown-mode-hook #'visual-line-mode)
+  ;;(add-hook 'markdown-mode-hook #'hl-line-mode)
+  ;;(add-hook 'markdown-mode-hook 'auto-revert-mode)
+
+  ;; Usage Example:
+  ;;  
+  ;; <!-- BEGIN RECEIVE ORGTBL ${1:YOUR_TABLE_NAME} -->
+  ;; <!-- END RECEIVE ORGTBL $1 -->
+  ;;  
+  ;; <!-- 
+  ;; #+ORGTBL: SEND $1 orgtbl-to-gfm
+  ;; | $0 | 
+  ;; -->
+  ;;
+  ;; <!--- BEGIN RECEIVE ORGTBL sample -->
+  ;; <!--- END RECEIVE ORGTBL sample -->
+
+  (defun orgtbl-to-gfm (table params)
+    "Convert the Orgtbl mode TABLE to GitHub Flavored Markdown."
+    (let* ((alignment (mapconcat (lambda (x) (if x "|--:" "|---"))
+                                 org-table-last-alignment ""))
+           (params2
+            (list
+             :splice t
+             :hline (concat alignment "|")
+             :lstart "| " :lend " |" :sep " | ")))
+      (orgtbl-to-generic table (org-combine-plists params2 params)))))
+
+(use-package rst
+  ;; http://docutils.sourceforge.net/docs/user/emacs.html
+  :ensure t
+  :mode ("\\.rst\\'" . rst-mode)
+  :config
+  (add-hook 'rst-mode-hook #'visual-line-mode)
+  (add-hook 'rst-mode-hook #'table-recognize)
+  (add-hook 'rst-mode-hook #'hl-line-mode)
+  (use-package table ;; http://emacswiki.org/emacs/TableMode
+    :ensure t))
+
+(use-package puml-mode  
+  ;;https://github.com/skuro/puml-mode
+  :disabled t
+  :ensure t
+  :defer t
+  ;; :mode (("\\.puml\\'" . puml-mode)
+  ;;        ("\\.plantuml\\'" . puml-mode))
+  :init (setq-default puml-plantuml-jar-path plantuml-jar-path)
+  :config
+  (add-hook 'puml-mode-hook #'hl-line-mode 'append)
+  ;;(add-hook 'puml-mode-hook #'dot-set-frame-maximized 'append)
+  )
+
+;; Load org-mode and contribs
+(use-package org
+  :ensure org-plus-contrib
+  :pin org-archive
+  :bind (("C-c l" . org-store-link)
+         ("C-c c" . org-capture)
+         ("C-c a" . org-agenda)
+         :map org-mode-map
+         ;; ("C-h" . org-delete-backward-char)
+         ("C-c !" . org-time-stamp-inactive))
+  :mode ("\\.org$" . org-mode)
+  :config
+  (require 'org-id)
+
+  (add-hook 'org-mode-hook #'(lambda () (visual-line-mode 1))
+            'append) ;; Wrap lines at window edge
+  (add-hook 'org-mode-hook #'(lambda () (font-lock-mode 1))
+            'append) ;; Org buffers only
+
+  ;; Set C-a and C-e to behave specially,
+  ;; considering the headline and not the leading stars,
+  ;; todo keywords, or the trailing tags.
+  (setq-default org-special-ctrl-a/e t)
+
+  ;; Needed for 'plantuml-mode
+  (setq-default org-plantuml-jar-path plantuml-jar-path) 
+
+  ;;https://github.com/zwz/plantuml-mode
+  ;;Old.  Use puml-mode instead
+  (use-package plantuml-mode
+    :disabled t
+    :ensure t
+    :if plantuml-jar-path
+    :init (setq-default plantuml-jar-path plantuml-jar-path))
+
+  ;; http://orgmode.org/worg/org-configs/org-customization-guide.html
+  ;; When the cursor is at the beginning of a headline, kill
+  ;; the entire line and possible the folded subtree below the
+  ;; line.
+  ;; When in the middle of the headline text, kill the
+  ;; headline up to the tags.
+  ;; When after the headline text, kill the tags.
+  (setq-default org-special-ctrl-k t)
+
+  ;; RET on a hyperlink follows link
+  (setq-default org-return-follows-link t) 
+
+  (setq-default org-log-done 'time)
+
+  (setq org-agenda-show-all-dates nil) ;; Show only days with something
+  (setq org-agenda-archives-mode nil)
+  (setq org-agenda-skip-comment-trees nil)
+  (setq-default org-agenda-skip-function nil)
+
+  ;; Unset C-c SPC from org-mode as this mapping used in Ace-Jump-Mode
+  ;; (add-hook 'org-mode-hook #'(lambda ()
+  ;;                            (local-unset-key (kbd "C-c SPC"))))
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages  '((emacs-lisp . t)
+                                (ditaa      . t)
+                                (dot        . t)
+                                (plantuml   . t)
+                                (sh         . t)
+                                (js         . t)
+                                (clojure    . t)
+                                (python     . t)
+                                (css        . t)))
+
+  ;; (defun my-org-confirm-babel-evaluate (lang body)
+  ;;   (and (not (string= lang "ditaa"))     ; don't ask for ditaa
+  ;;        (not (string= lang "dot"))       ; don't ask for Graphviz (dot)
+  ;;        (not (string= lang "emacs-lisp")) ; don't ask for emacs lisp
+  ;;        (not (string= lang "plantuml")))) ; don't ask for plantuml
+
+  ;; (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
+
+  (setq org-confirm-babel-evaluate nil) ;; Set to nil to allow all execution
+
+  (setq org-use-tag-inheritance t)
+
+  ;; Make headlines with inherited tags show up in tag searches
+  (setq org-tags-match-list-sublevels t)
+
+  ;; I can fit ~155 characters across the screen; 3 more are needed for the
+  ;; ellipsis for folded items, so -150 is about right for the tag position.
+  (setq org-tags-column -77)
+
+  ;; Use the same settings in the agenda
+  ;;(setq org-agenda-tags-column org-tags-column)
+
+  ;; Automatically change TODO entry to DONE when all children are done:
+  ;; http://orgmode.org/manual/Breaking-down-tasks.html#Breaking-down-tasks
+  (defun org-summary-todo (n-done n-not-done)
+    "Switch entry to DONE when all subentries are done, to TODO otherwise."
+    (let (org-log-done org-log-states)   ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+  (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+
+  ;;(add-hook 'org-mode-hook 'flyspell-prog-mode 'append)
+
+  ;; This one is kind of important!
+  ;; Copy/pasting a new heading will also
+  ;; duplicate the unique ID for that heading. Now, not so unique.
+  ;; This section should take care of creating a new ID for each cloned subtree.
+  ;; C-c C-x c clone subtree
+  (setq org-id-link-to-org-use-id t) ;; Create a unique id if none exists
+  ;; Create a unique id when a new heading is created.
+  ;;(add-hook 'org-insert-heading-hook 'org-id-get-create)
+  (setq org-clone-delete-id t) ;; Delete the new ID on clone
+
+  ;;(setq org-latex-listings t)
+  ;;(add-to-list 'org-latex-packages-alist '("" "listings"))
+
+  (setq org-src-fontify-natively t) ; Syntax highlight within code blocks.
+  (setq org-src-tab-acts-natively nil)  ; 't' makes tab behave like it
+                                        ; does in the corresponding
+                                        ; major mode.
+  (setq org-src-preserve-indentation t)
+  (setq org-edit-src-content-indentation 0)
+  (setq org-deadline-warning-days 30)
+  
+  (setq org-list-allow-alphabetical nil) ; Set to 't' to allow
+                                        ; alphabetical lists.
+  (setq org-clock-into-drawer t)
+
+  ;; http://orgmode.org/manual/Clean-view.html
+  (setq org-startup-indented t)   ;;#+STARTUP: indent
+  (setq org-hide-leading-stars t) ;;#+STARTUP: hidestars
+  ;;(setq org-odd-levels-only t)    ;;#+STARTUP: odd
+
+  ;; use org structures and tables in message mode
+  (add-hook 'markdown-mode-hook 'turn-on-orgtbl)
+  (add-hook 'gfm-mode-hook 'turn-on-orgtbl)
+
+  (use-package ox-rst                     ;https://github.com/masayuko/ox-rst
+    :disabled t
+    :ensure t)
+  (use-package ox-gfm                     ;gfm
+    :disabled t
     :ensure t) 
-
-  (use-package exec-path-from-shell
-    ;;https://github.com/purcell/exec-path-from-shell
-    :if osx-p ;;(memq window-system '(mac ns))
+  (use-package ox-taskjuggler             ;Scheduling in Org-Mode
+    :disabled t
+    :ensure t)
+  (use-package ox-md                      ;Markdown exported
+    :disabled t
+    :ensure t) 
+  (use-package org-bullets
+    :if (and osx-p (display-graphic-p)) ;;not working in windows
     :ensure t
-    :config (exec-path-from-shell-initialize))
-
-  (use-package recentf ;; http://www.emacswiki.org/RecentFiles
-    :ensure t
-    :bind (("C-x C-r" . helm-recentf)
-           ("C-x f" . helm-recentf))
-    :config (recentf-mode 1))
-
-  (use-package flycheck ;;https://github.com/flycheck/flycheck  
-    :if osx-p
-    :ensure t
-    :defer t
-    ;;  :diminish (flycheck-mode "Fly")
-    :init (add-hook 'prog-mode-hook #'flycheck-mode 'append)
-    :config
-    ;; (setq-default flycheck-highlighting-mode 'lines)
-    ;;                         '(columns symbols sexps lines))
-    (setq-default flycheck-indication-mode 'right-fringe))
-
-  (use-package diff-hl
-    :if (and osx-p (display-graphic-p)) ;;Broken windows  
-    :ensure t
-    :defer t
-    :init
-    (add-hook 'prog-mode-hook #'diff-hl-mode 'append)
-    (add-hook 'org-mode-hook #'diff-hl-mode 'append)
-    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)
-    :config
-    (diff-hl-mode)
-    (unless osx-p ;; Disabled in osx due to an issue with Magit
-      (diff-hl-flydiff-mode t)))
-
-  (use-package dired
-    :defer t
-    :config
-    (add-hook 'dired-mode-hook #'hl-line-mode)
-    (add-hook 'dired-mode-hook #'stripe-listify-buffer) 
-    (setq dired-listing-switches "-l")
-    (when osx-p (setq dired-use-ls-dired nil))
-    (use-package stripe-buffer ;;https://github.com/sabof/stripe-buffer
-      :ensure t))
-
-  (use-package dired+
-    ;; http://www.emacswiki.org/DiredPlus
+    :pin melpa-stable ;; melpa seems to be broken as of [2016-05-26 Thu]
+    :init (add-hook 'org-mode-hook #'(lambda () (org-bullets-mode 1))
+                    'append))
+  (use-package ox-reveal
+    ;; https://github.com/yjwen/org-reveal/blob/master/Readme.org
     :disabled t
     :ensure t
-    :defer t
-    :bind (("C-x C-d" . ido-dired))
-    :init
-    ;; Must be set prior to loading dired+
-    (setq diredp-hide-details-initially-flag nil)
-    ;; Activate hl-line minor mode
-    (add-hook 'dired-mode-hook #'hl-line-mode)
     :config
-    ;; Using 'a' to open a directory in the same buffer
-    ;;(put 'dired-find-alternative-file 'disabled nil)  
+    (require 'ox-reveal)
+    (setq org-reveal-theme "night")
+    (setq org-reveal-root (concat "file:///"
+                                  (expand-file-name "reveal.js"
+                                                    dotfiles/site-dir)))))
 
-    ;; Refresh also dired buffer
-    ;; From Magnars blog
-    (setq global-auto-revert-non-file-buffers t)
-    (setq auto-revert-verbose nil)
+(defun vc-git-print-log-date-only (files buffer)
+  "Get the date of the most recent commit associated with FILES."
+  (let ((coding-system-for-read vc-git-commits-coding-system))
+    ;; `vc-do-command' creates the buffer, but we need it before running
+    ;; the command.
+    (vc-setup-buffer buffer)
+    ;; If the buffer exists from a previous invocation it might be
+    ;; read-only.
+    (let ((inhibit-read-only t))
+      (with-current-buffer
+          buffer
+        (apply 'vc-git-command buffer
+               'async files
+               (append
+                '("log" "--no-color")
+                '("--pretty=format:%cd" "-1")
+                '("--")))))))
 
-    ;; Other
-    (setq dired-listing-switches "-l")
-    (when osx-p (setq dired-use-ls-dired nil)))
+(defun return-date-of-recent-commit (buffer)
+  (require 'vc)
+  (when (vc-find-backend-function (vc-backend (buffer-file-name buffer))
+                                  'print-log-date-only)
+    (let ((limit -1)
+          (vc-fileset nil)
+          (backend nil)
+          (files nil))
+      (with-current-buffer buffer
+        (setq vc-fileset (vc-deduce-fileset t)) ;FIXME: Why t? --Stef
+        (setq backend (car vc-fileset))
+        (setq files (cadr vc-fileset)))
+      (with-temp-buffer
+        (let ((status (vc-call-backend backend
+                                       'print-log-date-only
+                                       files
+                                       (current-buffer))))
+          (when (and (processp status) ;; Make sure status is a process
+                     (= 0 (process-exit-status status))) ;; And that it has not terminated
+            (while (not (eq 'exit (process-status status))) ;; Loop and sleep until complete
+              (sit-for 1 t)))
+          (buffer-string))))))
 
-  (use-package yasnippet
-    :ensure t
-    :init
-    (yas-global-mode 1)
-    ;; (add-hook 'prog-mode-hook #'yas-minor-mode)
-    :commands (yas-minor-mode yas-global-mode)
-    :defer t
-    :mode ("\\.yasnippet" . snippet-mode)
-    :config (yas-reload-all)
-    (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+;; (eval-after-load 'org-ac
+;;   '(progn
+;;      ;; Make config suit for you. About the config item, eval the following sexp.
+;;      ;;(customize-group "org-ac")
+;;      ;;(org-ac/config-default)
+;;      ))
 
-  ;;https://github.com/jorgenschaefer/typoel
-  (use-package typo
-    :disabled t
-    :ensure t
-    :defer t
-    :init
-    (add-hook 'text-mode-hook #'typo-mode))
+(use-package powerline
+  :ensure t
+  :if (display-graphic-p)
+  :config
+  (powerline-center-theme)
+  (when osx-p
+    (setq ns-use-srgb-colorspace nil))
+  (when (display-graphic-p)
+    (setq-default powerline-default-separator 'wave)))
 
-  (use-package hl-sentence
-    :ensure t
-    :defer t
-    :if (display-graphic-p)
-    :init
-    (add-hook 'text-mode-hook #'hl-sentence-mode)
+(use-package spaceline
+  :disabled t
+  :pin melpa
+  :ensure t 
+  :if (display-graphic-p)
+  :config
+  (require 'spaceline-config)
+  ;;(spaceline-spacemacs-theme)
+  (spaceline-emacs-theme)
+  (spaceline-helm-mode))
+
+(use-package rich-minority ;https://github.com/Malabarba/rich-minority
+  :disabled t
+  :ensure t
+  ;;:init (rich-minority-mode)
+  :config
+  (use-package smart-mode-line
+    :ensure t   
     :config
-    (set-face-attribute 'hl-sentence-face nil
-                        ;; :foreground "black")
-                        :foreground "white"))
-
-  (use-package deft
-    ;;https://github.com/jrblevin/deft
-    :ensure t
-    :bind (("C-x C-d" . deft))
-    :commands deft
-    :defer t
-    :config
-    (add-to-list 'auto-mode-alist '("/notes/.*\\.txt\\'" . markdown-mode))
-    (setq deft-extensions '("txt" "org" "rst" "tex")
-          deft-recursive t)
-    (setf deft-directory
-          (cond
-           ((file-exists-p dot-shared-directory)
-            dot-shared-directory)
-           ((file-exists-p "~/Documents/EDS/eds_tasks")
-            "~/Documents/EDS/eds_tasks")
-           ((file-exists-p "~/.deft")
-            "~/.deft"))))
-
-  (use-package popup
-    :disabled t
-    :ensure t
-    :defer t
-    ;; :bind (("C-c C-f" . describe-thing-in-popup))
-    :config
-    ;;http://blog.jenkster.com/2013/12/popup-help-in-emacs-lisp.html
-    ;; (defun describe-thing-in-popup ()
-    ;;   (interactive)
-    ;;   (let* ((thing (symbol-at-point))
-    ;;          (help-xref-following t)
-    ;;          (description (save-window-excursion
-    ;;                         (with-temp-buffer
-    ;;                           (help-mode)
-    ;;                           (help-xref-interned thing)
-    ;;                           (buffer-string)))))
-    ;;     (popup-tip description
-    ;;                :point (point)
-    ;;                :around t
-    ;;                :height 30
-    ;;                :scroll-bar t
-    ;;                :margin t)))
-    )
-
-  ;; http://www.emacswiki.org/EmacsClient
-  ;; http://www.emacswiki.org/emacs/EmacsMsWindowsIntegration
-
-  ;;(setenv "CVS_RSH" "ssh")
-
-  ;; User rights on Windows don't seem to allow this.
-  ;; emacsclientw.exe -na runemacs.exe -c
-  ;;(setenv "EDITOR" (executable-find "emacsclientw.exe"))
-
-  ;; This is here to stop the following error in Magit;
-  ;;
-  ;; "The directory ~/.emacs.d/server is unsafe"
-  ;;
-  ;; Probably because ~/.emacs.d/ is a symlink
-  ;; Emacs server
-  (use-package server
-    :if nil
-    :ensure t
-    :defer 5
-    :config
-    (when win32-p
-      (setq-default server-auth-dir (expand-file-name "server" use-home))
-      (and (>= emacs-major-version 23)
-           (defun server-ensure-safe-dir (dir) "Noop" t))
-      (unless (file-exists-p server-auth-dir)
-        (make-directory server-auth-dir)))
-    (unless (server-running-p)
-      (server-start)))
-
-  ;;(require 'server)
-  ;;(when (and (eq window-system 'w32) (file-exists-p (getenv "APPDATA")))
-  ;;  (setq server-auth-dir (concat (getenv "APPDATA") "\\.emacs.d"))
-  ;;  (unless (file-exists-p server-auth-dir)
-  ;;    (make-directory server-auth-dir)))
-  ;;(server-start)
-
-  (use-package uniquify
-    ;;http://www.emacswiki.org/emacs/uniquify
-    :config
-    ;; Use pathnames instead of <n> to uniquify buffer names
-    ;;(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
-    (setq-default
-     uniquify-buffer-name-style 'reverse
-     uniquify-separator "|"
-     uniquify-after-kill-buffer-p t ; rename after killing "uniquified" buffer
-     uniquify-ignore-buffers-re "^\\*" ; don't muck with special buffers
-     ))
-
-  (use-package whitespace
-    ;; http://emacswiki.org/emacs/WhiteSpace
-    :ensure t
-    :defer t
-    :init (add-hook 'prog-mode-hook #'whitespace-mode)
-    :config
-    (setq-default whitespace-style '(
-                                     face
-                                     ;;empty
-                                     ;;tabs
-                                     lines-tail
-                                     ;;trailing
-                                     ;;newline
-                                     ))
-    (setq-default indicate-buffer-boundaries 'right
-                  ;;indicate-empty-lines t ;; Indicate empty lines
-                  whitespace-line-column 80))
-
-  (use-package markdown-mode
-    ;; http://jblevins.org/projects/markdown-mode/
-    :ensure t
-    :mode (("\\`README\\.md\\'" . gfm-mode)
-           ("\\.md\\'"          . markdown-mode)
-           ("\\.markdown\\'"    . markdown-mode))
-    :config
-    ;;(add-hook 'markdown-mode-hook (lambda () (variable-pitch-mode t)))
-
-    (use-package markdown-toc
-      :ensure t)
-    (add-hook 'markdown-mode-hook 'turn-on-orgtbl)
-    (add-hook 'gfm-mode-hook 'turn-on-orgtbl)
-    ;;(add-hook 'markdown-mode-hook 'gfm-mode)
-    (add-hook 'markdown-mode-hook #'visual-line-mode)
-    ;;(add-hook 'markdown-mode-hook #'hl-line-mode)
-    ;;(add-hook 'markdown-mode-hook 'auto-revert-mode)
-
-    ;; Usage Example:
-    ;;  
-    ;; <!-- BEGIN RECEIVE ORGTBL ${1:YOUR_TABLE_NAME} -->
-    ;; <!-- END RECEIVE ORGTBL $1 -->
-    ;;  
-    ;; <!-- 
-    ;; #+ORGTBL: SEND $1 orgtbl-to-gfm
-    ;; | $0 | 
-    ;; -->
-    ;;
-    ;; <!--- BEGIN RECEIVE ORGTBL sample -->
-    ;; <!--- END RECEIVE ORGTBL sample -->
-
-    (defun orgtbl-to-gfm (table params)
-      "Convert the Orgtbl mode TABLE to GitHub Flavored Markdown."
-      (let* ((alignment (mapconcat (lambda (x) (if x "|--:" "|---"))
-                                   org-table-last-alignment ""))
-             (params2
-              (list
-               :splice t
-               :hline (concat alignment "|")
-               :lstart "| " :lend " |" :sep " | ")))
-        (orgtbl-to-generic table (org-combine-plists params2 params)))))
-
-  (use-package rst
-    ;; http://docutils.sourceforge.net/docs/user/emacs.html
-    :ensure t
-    :mode ("\\.rst\\'" . rst-mode)
-    :config
-    (add-hook 'rst-mode-hook #'visual-line-mode)
-    (add-hook 'rst-mode-hook #'table-recognize)
-    (add-hook 'rst-mode-hook #'hl-line-mode)
-    (use-package table ;; http://emacswiki.org/emacs/TableMode
-      :ensure t))
-
-  (use-package puml-mode  
-    ;;https://github.com/skuro/puml-mode
-    :disabled t
-    :ensure t
-    :defer t
-    ;; :mode (("\\.puml\\'" . puml-mode)
-    ;;        ("\\.plantuml\\'" . puml-mode))
-    :init (setq-default puml-plantuml-jar-path plantuml-jar-path)
-    :config
-    (add-hook 'puml-mode-hook #'hl-line-mode 'append)
-    ;;(add-hook 'puml-mode-hook #'dot-set-frame-maximized 'append)
-    )
-
-  ;; Load org-mode and contribs
-  (use-package org
-    :ensure org-plus-contrib
-    :pin org-archive
-    :bind (("C-c l" . org-store-link)
-           ("C-c c" . org-capture)
-           ("C-c a" . org-agenda)
-           :map org-mode-map
-           ;; ("C-h" . org-delete-backward-char)
-           ("C-c !" . org-time-stamp-inactive))
-    :mode ("\\.org$" . org-mode)
-    :config
-    (require 'org-id)
-
-    (add-hook 'org-mode-hook #'(lambda () (visual-line-mode 1))
-              'append) ;; Wrap lines at window edge
-    (add-hook 'org-mode-hook #'(lambda () (font-lock-mode 1))
-              'append) ;; Org buffers only
-
-    ;; Set C-a and C-e to behave specially,
-    ;; considering the headline and not the leading stars,
-    ;; todo keywords, or the trailing tags.
-    (setq-default org-special-ctrl-a/e t)
-
-    ;; Needed for 'plantuml-mode
-    (setq-default org-plantuml-jar-path plantuml-jar-path) 
-
-    ;;https://github.com/zwz/plantuml-mode
-    ;;Old.  Use puml-mode instead
-    (use-package plantuml-mode
-      :disabled t
-      :ensure t
-      :if plantuml-jar-path
-      :init (setq-default plantuml-jar-path plantuml-jar-path))
-
-    ;; http://orgmode.org/worg/org-configs/org-customization-guide.html
-    ;; When the cursor is at the beginning of a headline, kill
-    ;; the entire line and possible the folded subtree below the
-    ;; line.
-    ;; When in the middle of the headline text, kill the
-    ;; headline up to the tags.
-    ;; When after the headline text, kill the tags.
-    (setq-default org-special-ctrl-k t)
-
-    ;; RET on a hyperlink follows link
-    (setq-default org-return-follows-link t) 
-
-    (setq-default org-log-done 'time)
-
-    (setq org-agenda-show-all-dates nil) ;; Show only days with something
-    (setq org-agenda-archives-mode nil)
-    (setq org-agenda-skip-comment-trees nil)
-    (setq-default org-agenda-skip-function nil)
-
-    ;; Unset C-c SPC from org-mode as this mapping used in Ace-Jump-Mode
-    ;; (add-hook 'org-mode-hook #'(lambda ()
-    ;;                            (local-unset-key (kbd "C-c SPC"))))
-
-    (org-babel-do-load-languages
-     'org-babel-load-languages  '((emacs-lisp . t)
-                                  (ditaa      . t)
-                                  (dot        . t)
-                                  (plantuml   . t)
-                                  (sh         . t)
-                                  (js         . t)
-                                  (clojure    . t)
-                                  (python     . t)
-                                  (css        . t)))
-
-    ;; (defun my-org-confirm-babel-evaluate (lang body)
-    ;;   (and (not (string= lang "ditaa"))     ; don't ask for ditaa
-    ;;        (not (string= lang "dot"))       ; don't ask for Graphviz (dot)
-    ;;        (not (string= lang "emacs-lisp")) ; don't ask for emacs lisp
-    ;;        (not (string= lang "plantuml")))) ; don't ask for plantuml
-
-    ;; (setq org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate)
-
-    (setq org-confirm-babel-evaluate nil) ;; Set to nil to allow all execution
-
-    (setq org-use-tag-inheritance t)
-
-    ;; Make headlines with inherited tags show up in tag searches
-    (setq org-tags-match-list-sublevels t)
-
-    ;; I can fit ~155 characters across the screen; 3 more are needed for the
-    ;; ellipsis for folded items, so -150 is about right for the tag position.
-    (setq org-tags-column -77)
-
-    ;; Use the same settings in the agenda
-    ;;(setq org-agenda-tags-column org-tags-column)
-
-    ;; Automatically change TODO entry to DONE when all children are done:
-    ;; http://orgmode.org/manual/Breaking-down-tasks.html#Breaking-down-tasks
-    (defun org-summary-todo (n-done n-not-done)
-      "Switch entry to DONE when all subentries are done, to TODO otherwise."
-      (let (org-log-done org-log-states)   ; turn off logging
-        (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
-    (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-
-    ;;(add-hook 'org-mode-hook 'flyspell-prog-mode 'append)
-
-    ;; This one is kind of important!
-    ;; Copy/pasting a new heading will also
-    ;; duplicate the unique ID for that heading. Now, not so unique.
-    ;; This section should take care of creating a new ID for each cloned subtree.
-    ;; C-c C-x c clone subtree
-    (setq org-id-link-to-org-use-id t) ;; Create a unique id if none exists
-    ;; Create a unique id when a new heading is created.
-    ;;(add-hook 'org-insert-heading-hook 'org-id-get-create)
-    (setq org-clone-delete-id t) ;; Delete the new ID on clone
-
-    ;;(setq org-latex-listings t)
-    ;;(add-to-list 'org-latex-packages-alist '("" "listings"))
-
-    (setq org-src-fontify-natively t) ; Syntax highlight within code blocks.
-    (setq org-src-tab-acts-natively nil)  ; 't' makes tab behave like it
-                                          ; does in the corresponding
-                                          ; major mode.
-    (setq org-deadline-warning-days 30)
-    (setq org-list-allow-alphabetical nil) ; Set to 't' to allow
-                                          ; alphabetical lists.
-    (setq org-clock-into-drawer t)
-
-    ;; http://orgmode.org/manual/Clean-view.html
-    (setq org-startup-indented t)   ;;#+STARTUP: indent
-    (setq org-hide-leading-stars t) ;;#+STARTUP: hidestars
-    ;;(setq org-odd-levels-only t)    ;;#+STARTUP: odd
-
-    (use-package ox-rst                     ;https://github.com/masayuko/ox-rst
-      :disabled t
-      :ensure t)
-    (use-package ox-gfm                     ;gfm
-      :disabled t
-      :ensure t) 
-    (use-package ox-taskjuggler             ;Scheduling in Org-Mode
-      :disabled t
-      :ensure t)
-    (use-package ox-md                      ;Markdown exported
-      :disabled t
-      :ensure t) 
-    (use-package org-bullets
-      :if (and osx-p (display-graphic-p)) ;;not working in windows
-      :ensure t
-      :pin melpa-stable ;; melpa seems to be broken as of [2016-05-26 Thu]
-      :init (add-hook 'org-mode-hook #'(lambda () (org-bullets-mode 1))
-                      'append))
-    (use-package ox-reveal
-      ;; https://github.com/yjwen/org-reveal/blob/master/Readme.org
-      :disabled t
-      :ensure t
-      :config
-      (require 'ox-reveal)
-      (setq org-reveal-theme "night")
-      (setq org-reveal-root (concat "file:///"
-                                    (expand-file-name "reveal.js"
-                                                      dotfiles/site-dir)))))
-
-  (defun vc-git-print-log-date-only (files buffer)
-    "Get the date of the most recent commit associated with FILES."
-    (let ((coding-system-for-read vc-git-commits-coding-system))
-      ;; `vc-do-command' creates the buffer, but we need it before running
-      ;; the command.
-      (vc-setup-buffer buffer)
-      ;; If the buffer exists from a previous invocation it might be
-      ;; read-only.
-      (let ((inhibit-read-only t))
-        (with-current-buffer
-            buffer
-          (apply 'vc-git-command buffer
-                 'async files
-                 (append
-                  '("log" "--no-color")
-                  '("--pretty=format:%cd" "-1")
-                  '("--")))))))
-
-  (defun return-date-of-recent-commit (buffer)
-    (require 'vc)
-    (when (vc-find-backend-function (vc-backend (buffer-file-name buffer))
-                                    'print-log-date-only)
-      (let ((limit -1)
-            (vc-fileset nil)
-            (backend nil)
-            (files nil))
-        (with-current-buffer buffer
-          (setq vc-fileset (vc-deduce-fileset t)) ;FIXME: Why t? --Stef
-          (setq backend (car vc-fileset))
-          (setq files (cadr vc-fileset)))
-        (with-temp-buffer
-          (let ((status (vc-call-backend backend
-                                         'print-log-date-only
-                                         files
-                                         (current-buffer))))
-            (when (and (processp status) ;; Make sure status is a process
-                       (= 0 (process-exit-status status))) ;; And that it has not terminated
-              (while (not (eq 'exit (process-status status))) ;; Loop and sleep until complete
-                (sit-for 1 t)))
-            (buffer-string))))))
-
-  ;; (eval-after-load 'org-ac
-  ;;   '(progn
-  ;;      ;; Make config suit for you. About the config item, eval the following sexp.
-  ;;      ;;(customize-group "org-ac")
-  ;;      ;;(org-ac/config-default)
-  ;;      ))
-
-  (use-package powerline
-    :ensure t
-    :if (display-graphic-p)
-    :config
-    (powerline-center-theme)
-    (when osx-p
-      (setq ns-use-srgb-colorspace nil))
-    (when (display-graphic-p)
-      (setq-default powerline-default-separator 'wave)))
-
-  (use-package spaceline
-    :disabled t
-    :pin melpa
-    :ensure t 
-    :if (display-graphic-p)
-    :config
-    (require 'spaceline-config)
-    ;;(spaceline-spacemacs-theme)
-    (spaceline-emacs-theme)
-    (spaceline-helm-mode))
-
-  (use-package rich-minority ;https://github.com/Malabarba/rich-minority
-    :disabled t
-    :ensure t
-    ;;:init (rich-minority-mode)
-    :config
-    (use-package smart-mode-line
-      :ensure t   
-      :config
-      (progn
-        (setq sml/no-confirm-load-theme t)
-        (sml/setup)
-
-        ;;(sml/apply-theme 'dark)
-        ;;(sml/apply-theme 'light)
-        ;;(sml/apply-theme 'respectful)
-        (sml/apply-theme 'automatic))))
-
-  ;; Requires (cua-mode t)
-  (use-package cua-base ;; MS Windows Conventional mouse/arrow movement & selection
-    ;; C-c=Copy, C-x=Cut, C-v=Paste
-    :disabled t
-    :ensure t
-    :init (cua-mode 1)
-    :config 
-    ;; Set transient mark mode. i.e C-SPACE
-    ;;(setq cua-highlight-region-shift-only nil)
-    ;;(setq cua-toggle-set-mark t)
-    ;;(setq cua-enable-cua-keys nil)
-    ;;(setq cua-toggle-set-mark nil)
-
-    (cua-selection-mode t) ;; Use standard emacs keys for almost everything
-
-    ;;Enable the cursor indications
-    (setq-default
-     cua-enable-cursor-indications t
-     ;; Use an ORANGE cursor in normal (insertion) mode in read-write buffers,
-     cua-normal-cursor-color "orange"
-     ;; a RED cursor in overwrite mode in read-write buffers,
-     cua-overwrite-cursor-color "red"
-     ;; and a GREEN cursor read-only buffers
-     cua-read-only-cursor-color "green"))
-
-  (use-package gist
-    :disabled t
-    :ensure t
-    :defer t)
-
-  (use-package git-timemachine
-    ;; https://github.com/pidu/git-timemachine
-    ;;:disabled t
-    :ensure t
-    :defer t
-    :commands git-timemachine)
-
-  (use-package magit
-    :ensure t
-    :bind (("C-x g" . magit-status))
-    :config
-    ;; (add-hook 'magit-mode-hook #'hl-line-mode)
-    (setenv "GIT_PAGER" "")
-
-    (when nil
-      (magit-auto-revert-mode -1))
-
-    (use-package gitignore-mode
-      :ensure t)
-    (use-package gitconfig-mode
-      :ensure t)
-    (use-package gitattributes-mode
-      :ensure t)
-
-    (setq magit-display-buffer-function
-          #'magit-display-buffer-fullframe-status-v1)
-
-    ;; (use-package magit-backup
-    ;;   :ensure t
-    ;;   :commands magit-backup-mode
-    ;;   :config
-    ;;   (magit-backup-mode -1))
-
-    ;; (use-package magit-commit
-    ;;   :ensure t
-    ;;   :config
-    ;;   (remove-hook 'server-switch-hook 'magit-commit-diff))
-
-    ;; (unbind-key "M-h" magit-mode-map)
-    ;; (unbind-key "M-s" magit-mode-map)
-    ;; (unbind-key "M-m" magit-mode-map)
-    ;; (unbind-key "M-w" magit-mode-map)
-
-    ;; (bind-key "M-H" #'magit-show-level-2-all magit-mode-map)
-    ;; (bind-key "M-S" #'magit-show-level-4-all magit-mode-map)
-    ;; (bind-key "U" #'magit-unstage-all magit-mode-map)
-
-    ;; (add-hook 'magit-status-mode-hook #'(lambda () (magit-monitor t)))
-
-    ;; (add-hook 'magit-log-edit-mode-hook
-    ;;           #'(lambda ()
-    ;;               (set-fill-column 72)
-    ;;               (flyspell-mode)))
-    ;; (add-hook 'magit-commit-mode-hook
-    ;;           #'(lambda ()
-    ;;               (set-fill-column 50)
-    ;;               (flyspell-mode)))
-    )
-
-  ;;(require 'git-commit-mode)
-  ;;(require 'git-rebase-mode)
-
-  (use-package aggressive-indent ;;https://github.com/Malabarba/aggressive-indent-mode
-    :ensure t
-    :defer t
-    :init (add-hook 'prog-mode-hook #'aggressive-indent-mode 'append)
-    ;; Unsure if inferior-lisp-mode-hook inherits from prog-mode-hook
-    ;; (add-hook 'inferior-lisp-mode-hook #'aggressive-indent-mode 'append)
-    )
-
-  (use-package olivetti
-    ;;https://github.com/rnkn/olivetti
-    ;;:disabled t
-    :ensure t
-    :defer t
-    :init
-    (add-hook 'rst-mode-hook #'(lambda () (olivetti-mode t)))
-    (add-hook 'org-mode-hook #'(lambda () (olivetti-mode t)))
-    (add-hook 'markdown-mode-hook #'(lambda () (olivetti-mode t)))
-    :config (setq-default olivetti-body-width 0.8))
-
-  (use-package swiper
+    (progn
+      (setq sml/no-confirm-load-theme t)
+      (sml/setup)
+
+      ;;(sml/apply-theme 'dark)
+      ;;(sml/apply-theme 'light)
+      ;;(sml/apply-theme 'respectful)
+      (sml/apply-theme 'automatic))))
+
+;; Requires (cua-mode t)
+(use-package cua-base ;; MS Windows Conventional mouse/arrow movement & selection
+  ;; C-c=Copy, C-x=Cut, C-v=Paste
+  :disabled t
+  :ensure t
+  :init (cua-mode 1)
+  :config 
+  ;; Set transient mark mode. i.e C-SPACE
+  ;;(setq cua-highlight-region-shift-only nil)
+  ;;(setq cua-toggle-set-mark t)
+  ;;(setq cua-enable-cua-keys nil)
+  ;;(setq cua-toggle-set-mark nil)
+
+  (cua-selection-mode t) ;; Use standard emacs keys for almost everything
+
+  ;;Enable the cursor indications
+  (setq-default
+   cua-enable-cursor-indications t
+   ;; Use an ORANGE cursor in normal (insertion) mode in read-write buffers,
+   cua-normal-cursor-color "orange"
+   ;; a RED cursor in overwrite mode in read-write buffers,
+   cua-overwrite-cursor-color "red"
+   ;; and a GREEN cursor read-only buffers
+   cua-read-only-cursor-color "green"))
+
+(use-package gist
+  :disabled t
+  :ensure t
+  :defer t)
+
+(use-package git-timemachine
+  ;; https://github.com/pidu/git-timemachine
+  ;;:disabled t
+  :ensure t
+  :defer t
+  :commands git-timemachine)
+
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status))
+  :config
+  ;; (add-hook 'magit-mode-hook #'hl-line-mode)
+  (setenv "GIT_PAGER" "")
+
+  (when nil
+    (magit-auto-revert-mode -1))
+
+  (use-package gitignore-mode
+    :ensure t)
+  (use-package gitconfig-mode
+    :ensure t)
+  (use-package gitattributes-mode
+    :ensure t)
+
+  (setq magit-display-buffer-function
+        #'magit-display-buffer-fullframe-status-v1)
+
+  ;; (use-package magit-backup
+  ;;   :ensure t
+  ;;   :commands magit-backup-mode
+  ;;   :config
+  ;;   (magit-backup-mode -1))
+
+  ;; (use-package magit-commit
+  ;;   :ensure t
+  ;;   :config
+  ;;   (remove-hook 'server-switch-hook 'magit-commit-diff))
+
+  ;; (unbind-key "M-h" magit-mode-map)
+  ;; (unbind-key "M-s" magit-mode-map)
+  ;; (unbind-key "M-m" magit-mode-map)
+  ;; (unbind-key "M-w" magit-mode-map)
+
+  ;; (bind-key "M-H" #'magit-show-level-2-all magit-mode-map)
+  ;; (bind-key "M-S" #'magit-show-level-4-all magit-mode-map)
+  ;; (bind-key "U" #'magit-unstage-all magit-mode-map)
+
+  ;; (add-hook 'magit-status-mode-hook #'(lambda () (magit-monitor t)))
+
+  ;; (add-hook 'magit-log-edit-mode-hook
+  ;;           #'(lambda ()
+  ;;               (set-fill-column 72)
+  ;;               (flyspell-mode)))
+  ;; (add-hook 'magit-commit-mode-hook
+  ;;           #'(lambda ()
+  ;;               (set-fill-column 50)
+  ;;               (flyspell-mode)))
+  )
+
+;;(require 'git-commit-mode)
+;;(require 'git-rebase-mode)
+
+(use-package aggressive-indent ;;https://github.com/Malabarba/aggressive-indent-mode
+  :ensure t
+  :defer t
+  :init (add-hook 'prog-mode-hook #'aggressive-indent-mode 'append)
+  ;; Unsure if inferior-lisp-mode-hook inherits from prog-mode-hook
+  ;; (add-hook 'inferior-lisp-mode-hook #'aggressive-indent-mode 'append)
+  )
+
+(use-package olivetti
+  ;;https://github.com/rnkn/olivetti
+  ;;:disabled t
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'rst-mode-hook #'(lambda () (olivetti-mode t)))
+  (add-hook 'org-mode-hook #'(lambda () (olivetti-mode t)))
+  (add-hook 'markdown-mode-hook #'(lambda () (olivetti-mode t)))
+  :config (setq-default olivetti-body-width 120))
+
+(use-package swiper
+  ;;https://github.com/abo-abo/swiper
+  :disabled t
+  :ensure t
+  :init (add-hook 'prog-mode-hook #'ivy-mode 'append)
+  :diminish ivy-mode
+  :bind (("C-s" . swiper)
+         ("C-c C-r" . ivy-resume))
+  :config
+  (use-package ivy
     ;;https://github.com/abo-abo/swiper
-    :disabled t
-    :ensure t
-    :init (add-hook 'prog-mode-hook #'ivy-mode 'append)
-    :diminish ivy-mode
-    :bind (("C-s" . swiper)
-           ("C-c C-r" . ivy-resume))
-    :config
-    (use-package ivy
-      ;;https://github.com/abo-abo/swiper
-      :ensure t)
+    :ensure t)
 
-    (use-package counsel
-      ;;http://melpa.org/#/counsel
-      :disabled t
-      :ensure t)
-
-    (setq-default ivy-use-virtual-buffers t)
-    (ivy-mode 1)
-
-    ;; (global-set-key (kbd "<f6>") 'ivy-resume)
-    ;; (global-set-key (kbd "M-x") 'counsel-M-x)
-    ;; (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-    ;; (global-set-key (kbd "<f1> f") 'counsel-describe-function)
-    ;; (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-    ;; (global-set-key (kbd "<f1> l") 'counsel-load-library)
-    ;; (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-    ;; (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
-    ;; (global-set-key (kbd "C-c g") 'counsel-git)
-    ;; (global-set-key (kbd "C-c j") 'counsel-git-grep)
-    ;; (global-set-key (kbd "C-c k") 'counsel-ag)
-    ;; (global-set-key (kbd "C-x l") 'counsel-locate)
-    ;; (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
-    )
-
-  (use-package helm
-    :ensure t
-    :diminish helm-mode
-    :defer 5
-    :bind (("C-c h" . helm-command-prefix)
-           ("C-x b" . helm-mini)
-           ("C-x C-b" . helm-mini)
-           ("M-x" . helm-M-x)
-           ("M-y" . helm-show-kill-ring)
-           ("C-x C-f" . helm-find-files)
-           ;;("C-c h o" . helm-occur)   ;??
-           ("C-h a"   . helm-apropos)
-           ;; ("C-x f"   . helm-multi-files)
-           ;; ("M-s b"   . helm-occur)
-           ;; ("M-s n"   . my-helm-find)
-           ;; ("M-H"     . helm-resume)
-           :map helm-map 
-           ;; rebind TAB to run persistent action
-           ("<tab>" . helm-execute-persistent-action)
-           ;; make TAB works in terminal
-           ("C-i" . helm-execute-persistent-action)
-           ;; list actions using C-z
-           ("C-z" . helm-select-action))
-    :config
-
-    (require 'helm-config)
-    (global-set-key (kbd "C-c h o") 'helm-occur)
-    (setq-default
-     helm-buffers-fuzzy-matching t
-     helm-lisp-fuzzy-completion  t
-     helm-recentf-fuzzy-match    t
-     ;; helm-split-window-in-side-p t     ; open helm buffer inside
-                                          ; current window, not occupy ;
-                                          ; whole other window ;
-     helm-move-to-line-cycle-in-source t ; move to end or beginning
-                                          ; of source when reaching ;
-                                          ; top or bottom of source. ;
-     helm-ff-search-library-in-sexp    t ; search for library in
-                                          ; `require' and ;
-                                          ; `declare-function' sexp. ;
-     helm-scroll-amount                8 ; scroll 8 lines other
-                                          ; window using ;
-                                          ; M-<next>/M-<prior> ;
-     helm-ff-file-name-history-use-recentf t)
-
-    (when (executable-find "curl")
-      (setq-default helm-net-prefer-curl t))
-
-    (add-hook 'eshell-mode-hook
-              #'(lambda ()
-                  (eshell-cmpl-initialize)
-                  (define-key eshell-mode-map [remap pcomplete] ;; Remap command
-                    'helm-esh-pcomplete)
-                  (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history)))
-
-    ;;(helm-autoresize-mode 1)
-    (helm-mode 1)
-
-    (use-package helm-descbinds
-      :ensure t
-      :bind ("C-h b" . helm-descbinds)
-      :config (fset 'describe-bindings 'helm-descbinds))
-
-    (use-package helm-ls-git ;;https://github.com/emacs-helm/helm-ls-git
-      :disabled t
-      :ensure t)
-
-    (use-package swiper-helm ;; https://github.com/abo-abo/swiper
-      :ensure t
-      :bind (("C-s" . swiper)))
-
-    (use-package helm-swoop
-      :ensure t
-      :bind (("M-i" . helm-swoop)
-             ("M-I" . helm-swoop-back-to-last-point)
-             ("C-c M-i" . helm-multi-swoop)
-             ("C-x M-i" . helm-multi-swoop-all)
-             :map isearch-mode-map
-             ;; When doing isearch, hand the word over to helm-swoop
-             ("M-i" . helm-swoop-from-isearch)   
-             :map helm-swoop-map
-             ;; From helm-swoop to helm-multi-swoop-all
-             ("M-i" . helm-multi-swoop-all-from-helm-swoop)
-             ;; Instead of helm-multi-swoop-all, you can also use
-             ;; helm-multi-swoop-current-mode
-             ("M-m" . helm-multi-swoop-current-mode-from-helm-swoop) 
-             ;; Move up and down like isearch
-             ("C-r" . helm-previous-line)
-             ("C-s" . helm-next-line)
-             :map helm-multi-swoop-map
-             ("C-r" . helm-previous-line)
-             ("C-s" . helm-next-line)
-             ;; When doing evil-search, hand the word over to helm-swoop
-             ;;:map evil-motion-state-map
-             ;; ("M-i" . helm-swoop-from-evil-search)
-             ) 
-      :config
-      ;; Save buffer when helm-multi-swoop-edit complete
-      (setq helm-multi-swoop-edit-save t)
-      ;; If this value is t, split window inside the current window
-      (setq helm-swoop-split-with-multiple-windows nil)
-      ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
-      (setq helm-swoop-split-direction 'split-window-vertically)
-      ;; If nil, you can slightly boost invoke speed in exchange for text color
-      (setq helm-swoop-speed-or-color t)
-      ;; Go to the opposite side of line from the end or beginning of line
-      (setq helm-swoop-move-to-line-cycle t)
-      ;; Optional face for line numbers
-      ;; Face name is `helm-swoop-line-number-face`
-      (setq helm-swoop-use-line-number-face t)
-      ;; If you prefer fuzzy matching
-      (setq helm-swoop-use-fuzzy-match t)
-      ;; (setq helm-yas-display-key-on-candidate t)
-      )
-
-    (use-package helm-flyspell
-      :ensure t
-      :defer t
-      :config
-      (define-key flyspell-mode-map
-        [remap flyspell-auto-correct-word] ;; Remap command
-        'helm-flyspell-correct))
-
-    (use-package projectile
-      :ensure t
-      ;; :bind (("C-c p" . projectile-command-map))
-      :bind (("C-c p p" . helm-projectile-switch-project))
-      :diminish projectile-mode
-      :commands projectile-global-mode
-      :config
-      (use-package helm-projectile
-        :ensure t
-        :config
-        (setq projectile-completion-system 'helm)
-        (helm-projectile-on))
-      (projectile-global-mode)
-      (when mswindows-p
-        (setq projectile-indexing-method 'alien))))
-
-  (use-package company
-    :ensure t
-    :diminish (company-mode "CO")
-    :init (add-hook 'prog-mode-hook #'company-mode 'append)
-    :bind (:map company-mode-map
-                ("C-;" . helm-company)
-                :map company-active-map
-                ("C-;" . helm-company))
-    :config  
-    (use-package helm-company
-      :ensure t)
-    ;; (defadvice company-pseudo-tooltip-unless-just-one-frontend
-    ;;     (around only-show-tooltip-when-invoked activate)
-    ;;   (when (company-explicit-action-p)
-    ;;     ad-do-it))
-    )
-
-  ;; auto-complete is an alternative to company-mode
-  ;; Do not load auto-complete if company mode is loaded.
-  (use-package auto-complete
-    :disabled t
-    :ensure t
-    :config 
-    (require 'auto-complete-config)
-    (ac-config-default)
-    (use-package ac-helm
-      :ensure t
-      :bind (:map ac-complete-mode-map
-                  ("C-;" . ac-complete-with-helm))
-      :config
-      ;; (define-key ac-complete-mode-map (kbd "C-;") 'ac-complete-with-helm)
-      ))
-
-  (use-package avy ;; https://github.com/abo-abo/avy
-    :ensure t
-    :bind (
-           ;;("C-x C-;" . avy-goto-char-2)
-           ;;("M-g w" . avy-goto-word-1)
-           ("C-c j" . avy-goto-word-1)
-           ;;("C-c C-j" . avy-goto-char-2) ;; Clashes with org-goto
-           ;;("s-." . avy-goto-word-or-subword-1) 
-           ("M-p" . ace-window)
-           ("C-x o" . ace-window))
-    :init (avy-setup-default)
-    :config
-    (use-package ace-window
-      ;;https://github.com/abo-abo/ace-window
-      :ensure t    
-      :config
-      (setq-default
-       avy-all-windows nil
-       aw-keys '(?a ?s ?d ?f ?j ?k ?l)
-       aw-scope 'global
-       aw-background t
-       aw-dispatch-always nil)))
-
-  (use-package rainbow-mode
-    ;;https://julien.danjou.info/projects/emacs-packages#rainbow-mode
-    ;;rainbow-mode is a minor mode for Emacs which displays strings
-    ;;representing colors with the color they represent as background.
-    :ensure t
-    :defer t
-    :init (add-hook 'prog-mode-hook #'rainbow-mode 'append))
-
-  (use-package winner
-    ;;http://www.emacswiki.org/emacs/WinnerMode
-    ;;When activated, it allows you to “undo” (and “redo”) changes in
-    ;;the window configuration with the key commands ‘C-c left’ and ‘C-c right’
-    :ensure t
-    :if (not noninteractive)
-    :diminish winner-mode
-    :defer t
-    :config (winner-mode +1))
-
-  (use-package windmove
-    ;;https://www.emacswiki.org/emacs/WindMove
+  (use-package counsel
+    ;;http://melpa.org/#/counsel
     :disabled t
     :ensure t)
 
-  (use-package beacon
-    ;;https://github.com/Malabarba/beacon
-    :if (display-graphic-p)
+  (setq-default ivy-use-virtual-buffers t)
+  (ivy-mode 1)
+
+  ;; (global-set-key (kbd "<f6>") 'ivy-resume)
+  ;; (global-set-key (kbd "M-x") 'counsel-M-x)
+  ;; (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+  ;; (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+  ;; (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+  ;; (global-set-key (kbd "<f1> l") 'counsel-load-library)
+  ;; (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+  ;; (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+  ;; (global-set-key (kbd "C-c g") 'counsel-git)
+  ;; (global-set-key (kbd "C-c j") 'counsel-git-grep)
+  ;; (global-set-key (kbd "C-c k") 'counsel-ag)
+  ;; (global-set-key (kbd "C-x l") 'counsel-locate)
+  ;; (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+  )
+
+(use-package helm
+  :ensure t
+  :diminish helm-mode
+  :defer 5
+  :bind (("C-c h" . helm-command-prefix)
+         ("C-x b" . helm-mini)
+         ("C-x C-b" . helm-mini)
+         ("M-x" . helm-M-x)
+         ("M-y" . helm-show-kill-ring)
+         ("C-x C-f" . helm-find-files)
+         ;;("C-c h o" . helm-occur)   ;??
+         ("C-h a"   . helm-apropos)
+         ;; ("C-x f"   . helm-multi-files)
+         ;; ("M-s b"   . helm-occur)
+         ;; ("M-s n"   . my-helm-find)
+         ;; ("M-H"     . helm-resume)
+         :map helm-map 
+         ;; rebind TAB to run persistent action
+         ("<tab>" . helm-execute-persistent-action)
+         ;; make TAB works in terminal
+         ("C-i" . helm-execute-persistent-action)
+         ;; list actions using C-z
+         ("C-z" . helm-select-action))
+  :config
+
+  (require 'helm-config)
+  (global-set-key (kbd "C-c h o") 'helm-occur)
+  (setq-default
+   helm-buffers-fuzzy-matching t
+   helm-lisp-fuzzy-completion  t
+   helm-recentf-fuzzy-match    t
+   ;; helm-split-window-in-side-p t     ; open helm buffer inside
+                                        ; current window, not occupy ;
+                                        ; whole other window ;
+   helm-move-to-line-cycle-in-source t ; move to end or beginning
+                                        ; of source when reaching ;
+                                        ; top or bottom of source. ;
+   helm-ff-search-library-in-sexp    t ; search for library in
+                                        ; `require' and ;
+                                        ; `declare-function' sexp. ;
+   helm-scroll-amount                8 ; scroll 8 lines other
+                                        ; window using ;
+                                        ; M-<next>/M-<prior> ;
+   helm-ff-file-name-history-use-recentf t)
+
+  (when (executable-find "curl")
+    (setq-default helm-net-prefer-curl t))
+
+  (add-hook 'eshell-mode-hook
+            #'(lambda ()
+                (eshell-cmpl-initialize)
+                (define-key eshell-mode-map [remap pcomplete] ;; Remap command
+                  'helm-esh-pcomplete)
+                (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history)))
+
+  ;;(helm-autoresize-mode 1)
+  (helm-mode 1)
+
+  (use-package helm-descbinds
     :ensure t
-    :diminish beacon-mode
-    :config (beacon-mode 1))
+    :bind ("C-h b" . helm-descbinds)
+    :config (fset 'describe-bindings 'helm-descbinds))
 
-  (use-package git-gutter-fringe
-    ;;https://github.com/syohex/emacs-git-gutter-fringe
-    :disabled t
-    :ensure t
-    :bind (("C-x C-g" . git-gutter-mode)
-           ("C-x v =" . git-gutter:popup-hunk)
-           ;; Jump to next/previous hunk
-           ("C-x p" . git-gutter:previous-hunk)
-           ("C-x n" . git-gutter:next-hunk)
-           ;; Stage current hunk
-           ("C-x v s" . git-gutter:stage-hunk)
-           ;; Revert current hunk
-           ("C-x v r" . git-gutter:revert-hunk))
-    :commands (global-git-gutter-mode)
-    :config
-    ;;(setq-default git-gutter:lighter " GG")
-    (setq-default
-     git-gutter:update-interval 2
-     ;; first character should be a space
-     git-gutter:lighter " GG"
-     ;; ignore all spaces
-     git-gutter:diff-option "-w"))
-
-  (use-package hydra
-    :disabled t
-    :ensure t
-    :init
-    (defhydra hydra-zoom (global-map "<f7>")
-      "zoom"
-      ("g" text-scale-increase "in")
-      ("l" text-scale-decrease "out")))
-
-  (use-package volatile-highlights
-    ;;https://github.com/k-talo/volatile-highlights.el
-    :ensure t
-    :config (volatile-highlights-mode t))
-
-  (use-package sublimity
-    ;;https://github.com/zk-phi/sublimity
-    :disabled t
-    :if (display-graphic-p)
-    :ensure t
-    :config
-    (require 'sublimity-map)
-    ;;(require 'sublimity-attractive)
-    ;;(require 'sublimity-scroll)
-    (sublimity-mode 1)
-    (sublimity-map-set-delay nil)
-
-    ;; (setq sublimity-attractive-centering-width 100)    
-    ;; (sublimity-attractive-hide-bars)
-    ;; (sublimity-attractive-hide-vertical-border)
-    ;; (sublimity-attractive-hide-fringes)
-    ;; (sublimity-attractive-hide-modelines)
-    )
-
-  (use-package smartparens ;; https://github.com/Fuco1/smartparens
-    :ensure t
-    :defer t
-    :init
-    (add-hook 'prog-mode-hook #'smartparens-strict-mode)
-    ;;(add-hook 'inferior-lisp-mode-hook #'smartparens-mode)
-    :config
-    (require 'smartparens-config)
-    (smartparens-strict-mode t)
-    (show-smartparens-mode t))
-
-  (use-package paredit
-    ;;Alternate to smartparens
-    ;;http://danmidwood.com/content/2014/11/21/animated-paredit.html
-    ;;https://www.emacswiki.org/emacs/ParEdit
-    :disabled t
-    :ensure t 
-    :bind (:map paredit-mode-map
-                ("[" . paredit-open-round)
-                ("]" . paredit-close-round)
-                ("M-[" . paredit-wrap-round)
-                ("(" . paredit-open-square)
-                (")" . paredit-close-square)
-                ;; C-M-f paredit-forward
-                ;; C-M-f paredit-backward              
-                ("C-e" . paredit-forward)
-                ("C-a" . paredit-backward)
-                ("C-<up>" . paredit-backward-up)
-                ("C-<down>" . paredit-forward-down)
-                ("M-d" . paredit-forward-kill-word)
-                ;; C-w will perform Call 'kill-region' or 'backward-kill-word'
-                ;; depending on whether or not a region is selected.
-                ;; http://ruslanspivak.com/2010/09/22/c-w-to-delete-word-backward-in-conkeror/
-                ("C-w" . paredit-kill-region-or-delete-word))
-    :init
-    (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-    (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-    (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-    (add-hook 'inferior-lisp-mode-hook    #'enable-paredit-mode)
-
-    :config 
-    (defun paredit-kill-region-or-delete-word ()
-      "Call 'kill-region' or 'backward-delete-word'
-             depending on whether or not a region is selected."
-      (interactive)
-      (if (and transient-mark-mode mark-active)
-          (kill-region (point) (mark))
-        ;;(backward-kill-word 1)
-        (paredit-backward-kill-word))))
-
-  (when nil
-    ;; Don't use when smartparens is enabled.
-    ;; Highlights only the start/end parenthesis when cursor is over.
-    ;; Only enabled when smartparens-mode is not enabled.
-
-    ;; 'parenthesis highlights just brackets
-    ;; 'expression highlights entire bracket expression
-    ;; (setq-default show-paren-style 'expression)
-
-    ;; (set-face-background 'show-paren-match (face-background 'dark))
-    ;; (set-face-foreground 'show-paren-match "#def")
-    ;; (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
-
-    (show-paren-mode +1))
-
-  ;;  M-x list-colors-display
-  (when nil
-    ;;Highlight the surrounding nested S-expression's surrounding the point.
-    ;;https://www.emacswiki.org/emacs/HighlightSexps
-    (require 'highlight-sexps)
-    (add-hook 'lisp-mode-hook #'highlight-sexps-mode)
-    (add-hook 'emacs-lisp-mode-hook #'highlight-sexps-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook #'highlight-sexps-mode)
-    (add-hook 'lisp-interaction-mode-hook #'highlight-sexps-mode)
-    (add-hook 'inferior-lisp-mode-hook #'highlight-sexps-mode)
-    (highlight-sexps-mode +1)
-    (setq hl-sexp-background-colors '("Gray10" "Gray20")))
-
-  (when nil
-    ;; Highlights the sexp at the current position
-    ;;https://www.emacswiki.org/emacs/HighlightSexp
-    (require 'highlight-sexp)
-    (add-hook 'lisp-mode-hook #'highlight-sexp-mode)
-    (add-hook 'emacs-lisp-mode-hook #'highlight-sexp-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook #'highlight-sexp-mode)
-    (add-hook 'lisp-interaction-mode-hook #'highlight-sexp-mode)
-    (add-hook 'inferior-lisp-mode-hook #'highlight-sexp-mode)
-    (highlight-sexp-mode +1))
-
-  (use-package paren-face
-    ;;https://github.com/tarsius/paren-face
-    ;; Makes parenthesis less visible 
-    :disabled t
-    :ensure t 
-    :defer t
-    :init (add-hook 'prog-mode-hook #'paren-face-mode 'append)
-    :config
-    (custom-set-faces 
-     ;;'(parenthesis ((t (:foreground "DarkSlateGrey"))))
-     '(parenthesis ((t (:foreground "DimGrey"))))))
-
-  (use-package rainbow-delimiters
-    ;;Crazy multi-color highlighting of parenthesis
-    ;;https://github.com/Fanael/rainbow-delimiters
-    :defer t
-    :ensure t
-    :init
-    ;; (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
-    ;; (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
-    ;; (add-hook 'eval-expression-minibuffer-setup-hook #'rainbow-delimiters-mode)
-    ;; (add-hook 'lisp-interaction-mode-hook #'rainbow-delimiters-mode)
-    ;; (add-hook 'inferior-lisp-mode-hook #'rainbow-delimiters-mode)
-
-    ;; (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-
-  (use-package ido
-    ;;Disabled - use Helm instead
-    ;;http://www.masteringemacs.org/article/introduction-to-ido-mode
-    :disabled t
-    :ensure t
-    :config
-    (ido-mode)
-    (setq ido-enable-flex-matching t)
-    ;; .org files should be the first in the list.
-    (setq ido-file-extensions-order '(".org" ".png" ".html" ".el" ".tex")) 
-    (setq ido-everywhere t)
-    (setq org-completion-use-ido t))
-
-  (use-package which-key
-    ;;https://github.com/justbur/emacs-which-key
-    :ensure t
-    :diminish which-key-mode
-    :config
-    (which-key-mode +1)
-    (setq-default which-key-idle-delay 0.5))
-
-  (use-package god-mode ;https://github.com/chrisdone/god-mode
+  (use-package helm-ls-git ;;https://github.com/emacs-helm/helm-ls-git
     :disabled t
     :ensure t)
 
-  (use-package follow
-    ;;https://www.gnu.org/software/emacs/manual/html_node/emacs/Follow-Mode.html
-    ;;https://www.emacswiki.org/emacs/FollowMode
+  (use-package swiper-helm ;; https://github.com/abo-abo/swiper
     :ensure t
-    :bind (("C-c f" . follow-mode)))
+    :bind (("C-s" . swiper)))
 
-  ;; http://www.emacswiki.org/emacs/UndoTree
-  ;; http://ergoemacs.org/emacs/emacs_best_redo_mode.html
-  (use-package undo-tree
+  (use-package helm-swoop
     :ensure t
-    :diminish undo-tree-mode
-    :bind (("C-z" . undo)
-           ("C-x /" . undo-tree-visualize)
-           ("C-x U" . undo-tree-visualize)
-           ("C-S-z" . redo))
-    :init (global-undo-tree-mode)
-    :config  
-    (defalias 'redo 'undo-tree-redo))
-
-  (use-package adaptive-wrap
-    :ensure t
-    :defer t
-    :init (add-hook 'text-mode-hook #'adaptive-wrap-prefix-mode 'append))
-
-  (use-package linum
-    ;;Display line numbers
-    :ensure t
-    :defer t
-    :init
-    (add-hook 'prog-mode-hook #'linum-mode 'append)
-    ;; (add-hook 'rst-mode-hook #'linum-mode 'append)
-    ;; (add-hook 'markdown-mode-hook #'linum-mode 'append)
-    ;; (add-hook 'gfm-mode-hook #'linum-mode 'append)
-    ;; (add-hook 'nxml-mode-hook #'linum-mode 'append)
+    :bind (("M-i" . helm-swoop)
+           ("M-I" . helm-swoop-back-to-last-point)
+           ("C-c M-i" . helm-multi-swoop)
+           ("C-x M-i" . helm-multi-swoop-all)
+           :map isearch-mode-map
+           ;; When doing isearch, hand the word over to helm-swoop
+           ("M-i" . helm-swoop-from-isearch)   
+           :map helm-swoop-map
+           ;; From helm-swoop to helm-multi-swoop-all
+           ("M-i" . helm-multi-swoop-all-from-helm-swoop)
+           ;; Instead of helm-multi-swoop-all, you can also use
+           ;; helm-multi-swoop-current-mode
+           ("M-m" . helm-multi-swoop-current-mode-from-helm-swoop) 
+           ;; Move up and down like isearch
+           ("C-r" . helm-previous-line)
+           ("C-s" . helm-next-line)
+           :map helm-multi-swoop-map
+           ("C-r" . helm-previous-line)
+           ("C-s" . helm-next-line)
+           ;; When doing evil-search, hand the word over to helm-swoop
+           ;;:map evil-motion-state-map
+           ;; ("M-i" . helm-swoop-from-evil-search)
+           ) 
     :config
-
-    ;; (use-package hlinum
-    ;;   ;;Highlight the current line number
-    ;;   :ensure t
-    ;;   :config
-    ;;   (hlinum-activate)
-    ;;   (set-face-attribute 'linum-highlight-face nil
-    ;;                       :foreground "Yellow"
-    ;;                       :background "DimGrey")
-    ;;   (set-face-attribute 'linum nil
-    ;;                       :foreground "Grey"
-    ;;                       :background "DimGrey"))
-
-    ;; Delay updates to give Emacs a chance for other changes
-    ;; https://www.emacswiki.org/emacs/SmoothScrolling
-    (setq linum-delay t)
-
-    (defun linum-update-window-scale-fix (win)
-      "fix linum for scaled text"
-      (set-window-margins win
-                          (ceiling (* (if (boundp 'text-scale-mode-step)
-                                          (expt text-scale-mode-step
-                                                text-scale-mode-amount) 1)
-                                      (if (car (window-margins))
-                                          (car (window-margins)) 1)))))
-    (advice-add #'linum-update-window :after #'linum-update-window-scale-fix))
-
-  ;; (use-package nlinum
-  ;;   ;;https://www.emacswiki.org/emacs/LineNumbers#toc5  
-  ;;   :ensure t)
-
-  (use-package zoom-frm
-    ;;https://www.emacswiki.org/emacs/zoom-frm.el
-    ;;https://github.com/emacsmirror/emacswiki.org/blob/master/zoom-frm.el
-    :ensure t
-    :bind (:map ctl-x-map
-                ("C-=" . zoom-in/out)
-                ("C-+" . zoom-in/out)
-                ("C--" . zoom-in/out)
-                ("C-0" . zoom-in/out))
-    :config
-    (setq-default zoom-frame/buffer 'buffer))
-
-  (use-package fill-column-indicator
-    ;;https://github.com/alpaker/Fill-Column-Indicator
-    ;;https://www.emacswiki.org/emacs/HighlightCurrentColumn
-    ;;Unfortunately, does not work well when text is scaled.
-    :disabled t
-    :ensure t
-    :defer t
-    :init (add-hook 'prog-mode-hook #'fci-mode 'append)
-    :config (setq-default fci-rule-use-dashes t))
-
-  (use-package restclient
-    ;;https://github.com/pashky/restclient.el
-    :ensure t
-    :defer t
-    :config
-    (use-package restclient-helm))
-
-  (use-package cider
-    ;;https://github.com/clojure-emacs/cider
-    :ensure t
-    :defer t)
-
-  (use-package desktop
-    ;;:disabled t
-    :ensure t
-    :if (display-graphic-p)
-    :init (desktop-save-mode +1)
-    :config
-    (setq-default desktop-restore-eager 1)
-    (setq-default desktop-save 'ask)     ;Always ask
-    ;; Don't save the eww buffers
-    ;; (setq desktop-buffers-not-to-save
-    ;;       (concat desktop-buffers-not-to-save
-    ;;               "\\|\\(^eww\\(<[0-9]+>\\)*$\\)"
-    ;;               "\\|\\(^httpd\\(<[0-9]+>\\)*$\\)"))
-    ;; (setq desktop-files-not-to-save
-    ;;       (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
-    ;;               "\\)$"))
-    ;; (concat "\\(^/[^/:]*:\\|(ftp)$\\)" ; original value
-    ;;         "\\|\\(\\.gpg$\\)"
-    ;;         "\\|\\(\\.plstore$\\)"
-    ;;         "\\|\\(\\.desktop$\\)"
-    ;;         "\\|\\(\\TAGS$\\)") 
-
-    ;; (setq desktop-buffers-not-to-save
-    ;;       (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
-    ;;               "\\)$"))(setq desktop-buffers-not-to-save
-    ;;                             (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
-    ;;                                     "\\)$"))
-    ;;               (setq desktop-buffers-not-to-savessdd
-    ;;                     (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
-    ;;                             "\\)$")) 
-
-    ;; (setq desktop-files-not-to-save
-    ;;       (concat "\\(^/[^/:]*:\\|(ftp)$\\)" ; original value
-    ;;               "\\("
-    ;;               "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
-    ;;               "\\|PUML Preview\\|\\.newsrc-dribble"
-    ;;               "\\|*eww*\\|\\*httpd*"
-    ;;               "\\)$"))
-    (add-to-list 'desktop-modes-not-to-save 'eww-mode)
-    (add-to-list 'desktop-modes-not-to-save 'httpd-mode)
-    (add-to-list 'desktop-modes-not-to-save 'magit-mode)
-    (add-to-list 'desktop-modes-not-to-save 'magit-rev-mode)
-    (add-to-list 'desktop-modes-not-to-save 'magit-diff-mode)
-    (add-to-list 'desktop-modes-not-to-save 'metaediff-mode)
-    (add-to-list 'desktop-modes-not-to-save 'dired-mode)
-    (add-to-list 'desktop-modes-not-to-save 'Info-mode)
-    (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
-    (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
+    ;; Save buffer when helm-multi-swoop-edit complete
+    (setq helm-multi-swoop-edit-save t)
+    ;; If this value is t, split window inside the current window
+    (setq helm-swoop-split-with-multiple-windows nil)
+    ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
+    (setq helm-swoop-split-direction 'split-window-vertically)
+    ;; If nil, you can slightly boost invoke speed in exchange for text color
+    (setq helm-swoop-speed-or-color t)
+    ;; Go to the opposite side of line from the end or beginning of line
+    (setq helm-swoop-move-to-line-cycle t)
+    ;; Optional face for line numbers
+    ;; Face name is `helm-swoop-line-number-face`
+    (setq helm-swoop-use-line-number-face t)
+    ;; If you prefer fuzzy matching
+    (setq helm-swoop-use-fuzzy-match t)
+    ;; (setq helm-yas-display-key-on-candidate t)
     )
 
-  (use-package wttrin
-    ;;http://pragmaticemacs.com/emacs/weather-in-emacs/
-    ;;https://github.com/bcbcarl/emacs-wttrin
+  (use-package helm-flyspell
     :ensure t
     :defer t
     :config
-    (add-to-list 'wttrin-default-cities "Los Angeles")
-    (add-to-list 'wttrin-default-cities "Torrance")
-    (add-to-list 'wttrin-default-cities "London")
-    (add-to-list 'wttrin-default-cities "LAX")
-    (add-to-list 'wttrin-default-cities "Cape Town"))
+    (define-key flyspell-mode-map
+      [remap flyspell-auto-correct-word] ;; Remap command
+      'helm-flyspell-correct))
 
-  (use-package doc-view
-    ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Document-View.html
+  (use-package projectile
     :ensure t
-    :defer t
+    ;; :bind (("C-c p" . projectile-command-map))
+    :bind (("C-c p p" . helm-projectile-switch-project))
+    :diminish projectile-mode
+    :commands projectile-global-mode
     :config
-    (setq doc-view-continuous t
-          doc-view-resolution 300))
+    (use-package helm-projectile
+      :ensure t
+      :config
+      (setq projectile-completion-system 'helm)
+      (helm-projectile-on))
+    (projectile-global-mode)
+    (when mswindows-p
+      (setq projectile-indexing-method 'alien))))
 
-  (use-package comment-dwim-2
-    ;; https://github.com/remyferre/comment-dwim-2
+(use-package company
+  :ensure t
+  :diminish (company-mode "CO")
+  :init (add-hook 'prog-mode-hook #'company-mode 'append)
+  :bind (:map company-mode-map
+              ("C-;" . helm-company)
+              :map company-active-map
+              ("C-;" . helm-company))
+  :config  
+  (use-package helm-company
+    :ensure t)
+  ;; (defadvice company-pseudo-tooltip-unless-just-one-frontend
+  ;;     (around only-show-tooltip-when-invoked activate)
+  ;;   (when (company-explicit-action-p)
+  ;;     ad-do-it))
+  )
+
+;; auto-complete is an alternative to company-mode
+;; Do not load auto-complete if company mode is loaded.
+(use-package auto-complete
+  :disabled t
+  :ensure t
+  :config 
+  (require 'auto-complete-config)
+  (ac-config-default)
+  (use-package ac-helm
     :ensure t
-    :bind (("M-;" . comment-dwim-2)))
+    :bind (:map ac-complete-mode-map
+                ("C-;" . ac-complete-with-helm))
+    :config
+    ;; (define-key ac-complete-mode-map (kbd "C-;") 'ac-complete-with-helm)
+    ))
 
-  (use-package shrink-whitespace
-    ;; https://github.com/jcpetkovich/shrink-whitespace.el
-    ;; See also https://www.emacswiki.org/emacs/DeletingWhitespace
-    ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Useless-Whitespace.html
-    :ensure t
-    :defer t
-    :commands shrink-whitespace)
+(use-package avy ;; https://github.com/abo-abo/avy
+  :ensure t
+  :bind (
+         ;;("C-x C-;" . avy-goto-char-2)
+         ;;("M-g w" . avy-goto-word-1)
+         ("C-c j" . avy-goto-word-1)
+         ;;("C-c C-j" . avy-goto-char-2) ;; Clashes with org-goto
+         ;;("s-." . avy-goto-word-or-subword-1) 
+         ("M-p" . ace-window)
+         ("C-x o" . ace-window))
+  :init (avy-setup-default)
+  :config
+  (use-package ace-window
+    ;;https://github.com/abo-abo/ace-window
+    :ensure t    
+    :config
+    (setq-default
+     avy-all-windows nil
+     aw-keys '(?a ?s ?d ?f ?j ?k ?l)
+     aw-scope 'global
+     aw-background t
+     aw-dispatch-always nil)))
 
+(use-package rainbow-mode
+  ;;https://julien.danjou.info/projects/emacs-packages#rainbow-mode
+  ;;rainbow-mode is a minor mode for Emacs which displays strings
+  ;;representing colors with the color they represent as background.
+  :ensure t
+  :defer t
+  :init (add-hook 'prog-mode-hook #'rainbow-mode 'append))
+
+(use-package winner
+  ;;http://www.emacswiki.org/emacs/WinnerMode
+  ;;When activated, it allows you to “undo” (and “redo”) changes in
+  ;;the window configuration with the key commands ‘C-c left’ and ‘C-c right’
+  :ensure t
+  :if (not noninteractive)
+  :diminish winner-mode
+  :defer t
+  :config (winner-mode +1))
+
+(use-package windmove
+  ;;https://www.emacswiki.org/emacs/WindMove
+  :disabled t
+  :ensure t)
+
+(use-package beacon
+  ;;https://github.com/Malabarba/beacon
+  :if (display-graphic-p)
+  :ensure t
+  :diminish beacon-mode
+  :config (beacon-mode 1))
+
+(use-package git-gutter-fringe
+  ;;https://github.com/syohex/emacs-git-gutter-fringe
+  :disabled t
+  :ensure t
+  :bind (("C-x C-g" . git-gutter-mode)
+         ("C-x v =" . git-gutter:popup-hunk)
+         ;; Jump to next/previous hunk
+         ("C-x p" . git-gutter:previous-hunk)
+         ("C-x n" . git-gutter:next-hunk)
+         ;; Stage current hunk
+         ("C-x v s" . git-gutter:stage-hunk)
+         ;; Revert current hunk
+         ("C-x v r" . git-gutter:revert-hunk))
+  :commands (global-git-gutter-mode)
+  :config
+  ;;(setq-default git-gutter:lighter " GG")
+  (setq-default
+   git-gutter:update-interval 2
+   ;; first character should be a space
+   git-gutter:lighter " GG"
+   ;; ignore all spaces
+   git-gutter:diff-option "-w"))
+
+(use-package hydra
+  :disabled t
+  :ensure t
+  :init
+  (defhydra hydra-zoom (global-map "<f7>")
+    "zoom"
+    ("g" text-scale-increase "in")
+    ("l" text-scale-decrease "out")))
+
+(use-package volatile-highlights
+  ;;https://github.com/k-talo/volatile-highlights.el
+  :ensure t
+  :config (volatile-highlights-mode t))
+
+(use-package sublimity
+  ;;https://github.com/zk-phi/sublimity
+  :disabled t
+  :if (display-graphic-p)
+  :ensure t
+  :config
+  ;;(require 'sublimity-map)
+  (require 'sublimity-attractive)
+  ;;(require 'sublimity-scroll)
+  (sublimity-mode 1)
+  ;;(sublimity-map-set-delay nil)
+
+  ;; (setq sublimity-attractive-centering-width 100)
+  ;; (sublimity-attractive-hide-bars)
+  ;; (sublimity-attractive-hide-vertical-border)
+  ;; (sublimity-attractive-hide-fringes)
+  ;; (sublimity-attractive-hide-modelines)
+  (add-hook 'sublimity-map-setup-hook
+            (lambda ()
+              (setq buffer-face-mode-face '(:family "Monospace"))
+              (buffer-face-mode))))
+
+(use-package smartparens ;; https://github.com/Fuco1/smartparens
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'smartparens-strict-mode)
+  ;;(add-hook 'inferior-lisp-mode-hook #'smartparens-mode)
+  :config
+  (require 'smartparens-config)
+  (smartparens-strict-mode t)
+  (show-smartparens-mode t))
+
+(use-package paredit
+  ;;Alternate to smartparens
+  ;;http://danmidwood.com/content/2014/11/21/animated-paredit.html
+  ;;https://www.emacswiki.org/emacs/ParEdit
+  :disabled t
+  :ensure t 
+  :bind (:map paredit-mode-map
+              ("[" . paredit-open-round)
+              ("]" . paredit-close-round)
+              ("M-[" . paredit-wrap-round)
+              ("(" . paredit-open-square)
+              (")" . paredit-close-square)
+              ;; C-M-f paredit-forward
+              ;; C-M-f paredit-backward              
+              ("C-e" . paredit-forward)
+              ("C-a" . paredit-backward)
+              ("C-<up>" . paredit-backward-up)
+              ("C-<down>" . paredit-forward-down)
+              ("M-d" . paredit-forward-kill-word)
+              ;; C-w will perform Call 'kill-region' or 'backward-kill-word'
+              ;; depending on whether or not a region is selected.
+              ;; http://ruslanspivak.com/2010/09/22/c-w-to-delete-word-backward-in-conkeror/
+              ("C-w" . paredit-kill-region-or-delete-word))
+  :init
+  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  (add-hook 'inferior-lisp-mode-hook    #'enable-paredit-mode)
+
+  :config 
+  (defun paredit-kill-region-or-delete-word ()
+    "Call 'kill-region' or 'backward-delete-word'
+               depending on whether or not a region is selected."
+    (interactive)
+    (if (and transient-mark-mode mark-active)
+        (kill-region (point) (mark))
+      ;;(backward-kill-word 1)
+      (paredit-backward-kill-word))))
+
+(when nil
+  ;; Don't use when smartparens is enabled.
+  ;; Highlights only the start/end parenthesis when cursor is over.
+  ;; Only enabled when smartparens-mode is not enabled.
+
+  ;; 'parenthesis highlights just brackets
+  ;; 'expression highlights entire bracket expression
+  ;; (setq-default show-paren-style 'expression)
+
+  ;; (set-face-background 'show-paren-match (face-background 'dark))
+  ;; (set-face-foreground 'show-paren-match "#def")
+  ;; (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
+
+  (show-paren-mode +1))
+
+;;  M-x list-colors-display
+(when nil
+  ;;Highlight the surrounding nested S-expression's surrounding the point.
+  ;;https://www.emacswiki.org/emacs/HighlightSexps
+  (require 'highlight-sexps)
+  (add-hook 'lisp-mode-hook #'highlight-sexps-mode)
+  (add-hook 'emacs-lisp-mode-hook #'highlight-sexps-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'highlight-sexps-mode)
+  (add-hook 'lisp-interaction-mode-hook #'highlight-sexps-mode)
+  (add-hook 'inferior-lisp-mode-hook #'highlight-sexps-mode)
+  (highlight-sexps-mode +1)
+  (setq hl-sexp-background-colors '("Gray10" "Gray20")))
+
+(when nil
+  ;; Highlights the sexp at the current position
+  ;;https://www.emacswiki.org/emacs/HighlightSexp
+  (require 'highlight-sexp)
+  (add-hook 'lisp-mode-hook #'highlight-sexp-mode)
+  (add-hook 'emacs-lisp-mode-hook #'highlight-sexp-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'highlight-sexp-mode)
+  (add-hook 'lisp-interaction-mode-hook #'highlight-sexp-mode)
+  (add-hook 'inferior-lisp-mode-hook #'highlight-sexp-mode)
+  (highlight-sexp-mode +1))
+
+(use-package paren-face
+  ;;https://github.com/tarsius/paren-face
+  ;; Makes parenthesis less visible 
+  :disabled t
+  :ensure t 
+  :defer t
+  :init (add-hook 'prog-mode-hook #'paren-face-mode 'append)
+  :config
+  (custom-set-faces 
+   ;;'(parenthesis ((t (:foreground "DarkSlateGrey"))))
+   '(parenthesis ((t (:foreground "DimGrey"))))))
+
+(use-package rainbow-delimiters
+  ;;Crazy multi-color highlighting of parenthesis
+  ;;https://github.com/Fanael/rainbow-delimiters
+  :defer t
+  :ensure t
+  :init
+  ;; (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+  ;; (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+  ;; (add-hook 'eval-expression-minibuffer-setup-hook #'rainbow-delimiters-mode)
+  ;; (add-hook 'lisp-interaction-mode-hook #'rainbow-delimiters-mode)
+  ;; (add-hook 'inferior-lisp-mode-hook #'rainbow-delimiters-mode)
+
+  ;; (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+
+(use-package ido
+  ;;Disabled - use Helm instead
+  ;;http://www.masteringemacs.org/article/introduction-to-ido-mode
+  :disabled t
+  :ensure t
+  :config
+  (ido-mode)
+  (setq ido-enable-flex-matching t)
+  ;; .org files should be the first in the list.
+  (setq ido-file-extensions-order '(".org" ".png" ".html" ".el" ".tex")) 
+  (setq ido-everywhere t)
+  (setq org-completion-use-ido t))
+
+(use-package which-key
+  ;;https://github.com/justbur/emacs-which-key
+  :ensure t
+  :diminish which-key-mode
+  :config
+  (which-key-mode +1)
+  (setq-default which-key-idle-delay 0.5))
+
+(use-package god-mode ;https://github.com/chrisdone/god-mode
+  :disabled t
+  :ensure t)
+
+(use-package follow
+  ;;https://www.gnu.org/software/emacs/manual/html_node/emacs/Follow-Mode.html
+  ;;https://www.emacswiki.org/emacs/FollowMode
+  :ensure t
+  :bind (("C-c f" . follow-mode)))
+
+;; http://www.emacswiki.org/emacs/UndoTree
+;; http://ergoemacs.org/emacs/emacs_best_redo_mode.html
+(use-package undo-tree
+  :ensure t
+  :diminish undo-tree-mode
+  :bind (("C-z" . undo)
+         ("C-x /" . undo-tree-visualize)
+         ("C-x U" . undo-tree-visualize)
+         ("C-S-z" . redo))
+  :init (global-undo-tree-mode)
+  :config  
+  (defalias 'redo 'undo-tree-redo))
+
+(use-package adaptive-wrap
+  :ensure t
+  :defer t
+  :init (add-hook 'text-mode-hook #'adaptive-wrap-prefix-mode 'append))
+
+(use-package linum
+  ;;Display line numbers
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'linum-mode 'append)
+  ;; (add-hook 'rst-mode-hook #'linum-mode 'append)
+  ;; (add-hook 'markdown-mode-hook #'linum-mode 'append)
+  ;; (add-hook 'gfm-mode-hook #'linum-mode 'append)
+  ;; (add-hook 'nxml-mode-hook #'linum-mode 'append)
+  :config
+
+  ;; (use-package hlinum
+  ;;   ;;Highlight the current line number
+  ;;   :ensure t
+  ;;   :config
+  ;;   (hlinum-activate)
+  ;;   (set-face-attribute 'linum-highlight-face nil
+  ;;                       :foreground "Yellow"
+  ;;                       :background "DimGrey")
+  ;;   (set-face-attribute 'linum nil
+  ;;                       :foreground "Grey"
+  ;;                       :background "DimGrey"))
+
+  ;; Delay updates to give Emacs a chance for other changes
+  ;; https://www.emacswiki.org/emacs/SmoothScrolling
+  (setq linum-delay t)
+
+  (defun linum-update-window-scale-fix (win)
+    "fix linum for scaled text"
+    (set-window-margins win
+                        (ceiling (* (if (boundp 'text-scale-mode-step)
+                                        (expt text-scale-mode-step
+                                              text-scale-mode-amount) 1)
+                                    (if (car (window-margins))
+                                        (car (window-margins)) 1)))))
+  (advice-add #'linum-update-window :after #'linum-update-window-scale-fix))
+
+;; (use-package nlinum
+;;   ;;https://www.emacswiki.org/emacs/LineNumbers#toc5  
+;;   :ensure t)
+
+(use-package zoom-frm
+  ;;https://www.emacswiki.org/emacs/zoom-frm.el
+  ;;https://github.com/emacsmirror/emacswiki.org/blob/master/zoom-frm.el
+  :ensure t
+  :bind (:map ctl-x-map
+              ("C-=" . zoom-in/out)
+              ("C-+" . zoom-in/out)
+              ("C--" . zoom-in/out)
+              ("C-0" . zoom-in/out))
+  :config
+  (setq-default zoom-frame/buffer 'buffer))
+
+(use-package fill-column-indicator
+  ;;https://github.com/alpaker/Fill-Column-Indicator
+  ;;https://www.emacswiki.org/emacs/HighlightCurrentColumn
+  ;;Unfortunately, does not work well when text is scaled.
+  :disabled t
+  :ensure t
+  :defer t
+  :init (add-hook 'prog-mode-hook #'fci-mode 'append)
+  :config (setq-default fci-rule-use-dashes t))
+
+(use-package restclient
+  ;;https://github.com/pashky/restclient.el
+  :ensure t
+  :defer t
+  :config
+  (use-package restclient-helm))
+
+(use-package cider
+  ;;https://github.com/clojure-emacs/cider
+  :ensure t
+  :defer t)
+
+(use-package desktop
+  ;;:disabled t
+  :ensure t
+  :if (display-graphic-p)
+  :init (desktop-save-mode +1)
+  :config
+  (setq-default desktop-restore-eager 1)
+  (setq-default desktop-save 'ask)     ;Always ask
+  ;; Don't save the eww buffers
+  ;; (setq desktop-buffers-not-to-save
+  ;;       (concat desktop-buffers-not-to-save
+  ;;               "\\|\\(^eww\\(<[0-9]+>\\)*$\\)"
+  ;;               "\\|\\(^httpd\\(<[0-9]+>\\)*$\\)"))
+  ;; (setq desktop-files-not-to-save
+  ;;       (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
+  ;;               "\\)$"))
+  ;; (concat "\\(^/[^/:]*:\\|(ftp)$\\)" ; original value
+  ;;         "\\|\\(\\.gpg$\\)"
+  ;;         "\\|\\(\\.plstore$\\)"
+  ;;         "\\|\\(\\.desktop$\\)"
+  ;;         "\\|\\(\\TAGS$\\)") 
+
+  ;; (setq desktop-buffers-not-to-save
+  ;;       (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
+  ;;               "\\)$"))(setq desktop-buffers-not-to-save
+  ;;                             (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
+  ;;                                     "\\)$"))
+  ;;               (setq desktop-buffers-not-to-savessdd
+  ;;                     (concat "\\(" "^nn\\.a[0-9]+\\|\\.log\\|(ftp)"
+  ;;                             "\\)$")) 
+
+  ;; (setq desktop-files-not-to-save
+  ;;       (concat "\\(^/[^/:]*:\\|(ftp)$\\)" ; original value
+  ;;               "\\("
+  ;;               "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
+  ;;               "\\|PUML Preview\\|\\.newsrc-dribble"
+  ;;               "\\|*eww*\\|\\*httpd*"
+  ;;               "\\)$"))
+  (add-to-list 'desktop-modes-not-to-save 'eww-mode)
+  (add-to-list 'desktop-modes-not-to-save 'httpd-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-rev-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-diff-mode)
+  (add-to-list 'desktop-modes-not-to-save 'metaediff-mode)
+  (add-to-list 'desktop-modes-not-to-save 'dired-mode)
+  (add-to-list 'desktop-modes-not-to-save 'Info-mode)
+  (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
+  (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
+  )
+
+(use-package wttrin
+  ;;http://pragmaticemacs.com/emacs/weather-in-emacs/
+  ;;https://github.com/bcbcarl/emacs-wttrin
+  :ensure t
+  :defer t
+  :config
+  (add-to-list 'wttrin-default-cities "Los Angeles")
+  (add-to-list 'wttrin-default-cities "Torrance")
+  (add-to-list 'wttrin-default-cities "London")
+  (add-to-list 'wttrin-default-cities "LAX")
+  (add-to-list 'wttrin-default-cities "Cape Town"))
+
+(use-package doc-view
+  ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Document-View.html
+  :ensure t
+  :defer t
+  :config
+  (setq doc-view-continuous t
+        doc-view-resolution 300))
+
+(use-package comment-dwim-2
+  ;; https://github.com/remyferre/comment-dwim-2
+  :ensure t
+  :bind (("M-;" . comment-dwim-2)))
+
+(use-package shrink-whitespace
+  ;; https://github.com/jcpetkovich/shrink-whitespace.el
+  ;; See also https://www.emacswiki.org/emacs/DeletingWhitespace
+  ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Useless-Whitespace.html
+  :ensure t
+  :defer t
+  :commands shrink-whitespace)
+
+(use-package impatient-mode
+  :ensure t
+  :defer t)
+
+(use-package multiple-cursors
+  ;;https://github.com/magnars/multiple-cursors.el
+  :if osx-p
+  :ensure t
+  :bind (("C-c m" . mc/edit-lines)
+         ("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)))
+
+(defvar puml-impatient-mode-load-path
+  (expand-file-name "puml-impatient-mode" dotfiles/site-dir))
+
+(use-package puml-impatient-mode
+  :load-path puml-impatient-mode-load-path
+  :pin manual
+  :bind (:map puml-impatient-mode-map
+              ("C-c C-p" . puml-imp-execute)
+              ("C-c C-o" . puml-imp-visit-buffer))
+  :commands puml-impatient-mode
+  :config
   (use-package impatient-mode
-    :ensure t
-    :defer t)
+    :ensure t)
+  (add-hook 'puml-impatient-mode-hook #'hl-line-mode 'append)
+  (setq plantuml-jar-path plantuml-jar-path)  
+  (httpd-start))
 
-  (use-package multiple-cursors
-    ;;https://github.com/magnars/multiple-cursors.el
-    :if osx-p
-    :ensure t
-    :bind (("C-c m" . mc/edit-lines)
-           ("C->" . mc/mark-next-like-this)
-           ("C-<" . mc/mark-previous-like-this)
-           ("C-c C-<" . mc/mark-all-like-this)))
+(use-package fortune-cookie ;https://github.com/andschwa/fortune-cookie
+  ;; Sets INITIAL-SCRATCH-MESSAGE to a fortune quote rendered by cowsay.
+  :ensure t
+  :if (and (executable-find "cowsay") (executable-find "fortune"))
+  :config
+  ;; Set fortune-cookie-cowsay-args within M-x customize to change
+  ;; cowsay defaults
+  (setq fortune-cookie-cowsay-args "-f ghostbusters -s"))
 
-  (defvar puml-impatient-mode-load-path
-    (expand-file-name "puml-impatient-mode" dotfiles/site-dir))
+(use-package command-log-mode
+  ;;https://github.com/lewang/command-log-mode
+  :ensure t
+  :defer t
+  :init
+  (setq-default command-log-mode-open-log-turns-on-mode t)
+  :bind (("C-c o" . clm/toggle-command-log-buffer)))
 
-  (use-package puml-impatient-mode
-    :load-path puml-impatient-mode-load-path
-    :pin manual
-    :bind (:map puml-impatient-mode-map
-                ("C-c C-p" . puml-imp-execute)
-                ("C-c C-o" . puml-imp-visit-buffer))
-    :commands puml-impatient-mode
-    :config
-    (use-package impatient-mode
-      :ensure t)
-    (add-hook 'puml-impatient-mode-hook #'hl-line-mode 'append)
-    (setq plantuml-jar-path plantuml-jar-path)  
-    (httpd-start))
-
-  (use-package fortune-cookie ;https://github.com/andschwa/fortune-cookie
-    ;; Sets INITIAL-SCRATCH-MESSAGE to a fortune quote rendered by cowsay.
-    :ensure t
-    :if (and (executable-find "cowsay") (executable-find "fortune"))
-    :config
-    ;; Set fortune-cookie-cowsay-args within M-x customize to change
-    ;; cowsay defaults
-    (setq fortune-cookie-cowsay-args "-f ghostbusters -s"))
+(use-package highlight-indent-guides
+  ;;https://github.com/DarthFennec/highlight-indent-guides 
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+  :config
+  (setq highlight-indent-guides-method 'character))
 #+END_SRC
 
 * Start eshell

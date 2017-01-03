@@ -31,6 +31,7 @@ open /Applications/Emacs.app --args --debug-init
 open /Applications/Emacs.app --args --no-init-file
 ```
 
+
 ## Cowsay 
 
 ```bash
