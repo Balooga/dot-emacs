@@ -391,8 +391,7 @@
   (setq frame-title-format
 	'(
           ""
-          ;;invocation-name
-          ;; " DIRECTV - "
+          invocation-name
           " - "
           (:eval (if (buffer-file-name)
                      (abbreviate-file-name (buffer-file-name))
@@ -805,6 +804,23 @@
     ;;                nil
     ;;                iso-8859-1))
     )
+#+END_SRC
+
+** Scrolling without moving the point
+#+BEGIN_SRC emacs-lisp
+(defun gcm-scroll-down ()
+  (interactive)
+  (scroll-up 1))
+
+(defun gcm-scroll-up ()
+  (interactive)
+  (scroll-down 1))
+
+(global-unset-key (kbd "M-n"))
+(global-unset-key (kbd "M-p"))
+
+(global-set-key (kbd "M-n") 'gcm-scroll-down)
+(global-set-key (kbd "M-p")   'gcm-scroll-up)
 #+END_SRC
 
 * LaTeX
@@ -1961,7 +1977,7 @@
          ("C-c j" . avy-goto-word-1)
          ;;("C-c C-j" . avy-goto-char-2) ;; Clashes with org-goto
          ;;("s-." . avy-goto-word-or-subword-1) 
-         ("M-p" . ace-window)
+         ;;("M-p" . ace-window)
          ("C-x o" . ace-window))
   :init (avy-setup-default)
   :config
@@ -2445,6 +2461,12 @@
   (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
   :config
   (setq highlight-indent-guides-method 'character))
+
+(use-package o-blog
+  :defer t
+  :ensure t
+  :init
+  (add-to-list 'load-path "~/Google Drive/blog"))
 #+END_SRC
 
 * Start eshell
