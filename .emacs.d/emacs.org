@@ -1467,7 +1467,8 @@
                                 (js         . t)
                                 (clojure    . t)
                                 (python     . t)
-                                (css        . t)))
+                                (css        . t)
+                                (shell      . t)))
 
   ;; (defun my-org-confirm-babel-evaluate (lang body)
   ;;   (and (not (string= lang "ditaa"))     ; don't ask for ditaa
@@ -2467,6 +2468,11 @@
   :ensure t
   :init
   (add-to-list 'load-path "~/Google Drive/blog"))
+
+(use-package slime
+  :ensure t
+  :config
+  (setq inferior-lisp-program "sbcl"))
 #+END_SRC
 
 * Start eshell
