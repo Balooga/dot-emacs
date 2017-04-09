@@ -89,8 +89,10 @@
     (cond
      (osx-p
       'mac)
+      (gnu/linux-p
+      'linux)
      (t
-      'win))
+     'win))
     ;;'ergodox
     ;;'hhbk
     )
@@ -108,9 +110,11 @@
     (cond
      ((eq kb-type 'mac)
       (setq-default mac-command-modifier 'meta
-                    mac-option-modifier 'control
+                    mac-option-modifier© 'control
                     mac-right-command-modifier 'control
                     mac-function-modifier 'hyper))
+     ((eq kb-type 'linux)
+      t)
      (t
       (setq-default mac-command-modifier 'control
                     mac-option-modifier 'meta))))
