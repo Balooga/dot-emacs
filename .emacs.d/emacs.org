@@ -72,9 +72,6 @@
     (expand-file-name "site" dotfiles-dir)
     "Contains packages or files not available from a package archive site.")
 
-  (defvar dot-shared-directory
-    (return-if-file-exists "~/Google Drive/notes"))
-
   ;; Add all subdirectories under ~/.emacs.d/site/ to the load path
   ;; https://www.emacswiki.org/emacs/LoadPath
   (when nil
@@ -1241,13 +1238,9 @@
   (setq deft-extensions '("txt" "org" "rst" "tex")
         deft-recursive t)
   (setf deft-directory
-        (cond
-         ((file-exists-p dot-shared-directory)
-          dot-shared-directory)
-         ((file-exists-p "~/Documents/EDS/eds_tasks")
-          "~/Documents/EDS/eds_tasks")
-         ((file-exists-p "~/.deft")
-          "~/.deft"))))
+        (cond 
+         ((file-exists-p "~/Documents/.deft")
+          "~/Documents/.deft"))))
 
 (use-package popup
   :disabled t
