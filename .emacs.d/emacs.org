@@ -1140,10 +1140,10 @@
   :config (recentf-mode 1))
 
 (use-package flycheck ;;https://github.com/flycheck/flycheck  
-  :if osx-p
+  :if (or osx-p gnu/linux-p)
   :ensure t
   :defer t
-  ;;  :diminish (flycheck-mode "Fly")
+ :diminish (flycheck-mode "Fly")
   :init (add-hook 'prog-mode-hook #'flycheck-mode 'append)
   :config
   ;; (setq-default flycheck-highlighting-mode 'lines)
@@ -1151,7 +1151,7 @@
   (setq-default flycheck-indication-mode 'right-fringe))
 
 (use-package diff-hl
-  :if (and osx-p (display-graphic-p)) ;;Broken windows  
+  :if (and (display-graphic-p) (or osx-p gnu/linux-p)) ;;Broken windows  
   :ensure t
   :defer t
   :init
@@ -1234,9 +1234,9 @@
   :commands deft
   :defer t
   :config
-  (add-to-list 'auto-mode-alist '("/notes/.*\\.txt\\'" . markdown-mode))
-  (setq deft-extensions '("txt" "org" "rst" "tex")
-        deft-recursive t)
+  (add-to-list 'auto-mode-alist '("/.deft/.*\\.txt\\'" . markdown-mode))
+  ;;(setq deft-extensions '("txt" "org" "rst" "tex")
+  ;;      deft-recursive t)
   (setf deft-directory
         (cond 
          ((file-exists-p "~/Documents/.deft")
@@ -1513,7 +1513,7 @@
   ;;(add-to-list 'org-latex-packages-alist '("" "listings"))
 
   (setq org-src-fontify-natively t) ; Syntax highlight within code blocks.
-  (setq org-src-tab-acts-natively nil)  ; 't' makes tab behave like it
+  (setq org-src-tab-acts-natively t)    ; 't' makes tab behave like it
                                         ; does in the corresponding
                                         ; major mode.
   (setq org-src-preserve-indentation t)
@@ -2441,7 +2441,8 @@
   :config
   ;; Set fortune-cookie-cowsay-args within M-x customize to change
   ;; cowsay defaults
-  (setq fortune-cookie-cowsay-args "-f ghostbusters -s"))
+  (setq fortune-cookie-cowsay-args "-f ghostbusters -s")
+  (setq fortune-cookie-cowsay-enable t))
 
 (use-package command-log-mode
   ;;https://github.com/lewang/command-log-mode
