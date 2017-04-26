@@ -2377,6 +2377,7 @@
   :ensure t
   :defer t
   :config
+  (add-to-list 'wttrin-default-cities "Burbank")
   (add-to-list 'wttrin-default-cities "Los Angeles")
   (add-to-list 'wttrin-default-cities "Torrance")
   (add-to-list 'wttrin-default-cities "London")
