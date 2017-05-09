@@ -350,6 +350,8 @@ you should place your code here."
     (add-hook 'markdown-mode-hook #'(lambda () (olivetti-mode t)))
     :config (setq-default olivetti-body-width 120))
 
+  (add-hook 'text-mode-hook #'visual-line-mode)
+
   ;; osx layer configurations
   ;; TBD
 
