@@ -73,7 +73,7 @@
     "Contains packages or files not available from a package archive site.")
 
   (defvar dot-shared-directory
-    (return-if-file-exists "~/Google Drive/notes"))
+    (return-if-file-exists "~/Google_Drive/notes"))
 
   ;; Add all subdirectories under ~/.emacs.d/site/ to the load path
   ;; https://www.emacswiki.org/emacs/LoadPath
@@ -2471,7 +2471,7 @@
   :defer t
   :ensure t
   :init
-  (add-to-list 'load-path "~/Google Drive/blog"))
+  (add-to-list 'load-path "~/Google_Drive/blog"))
 
 (use-package slime
   :ensure t
