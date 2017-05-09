@@ -72,9 +72,6 @@
     (expand-file-name "site" dotfiles-dir)
     "Contains packages or files not available from a package archive site.")
 
-  (defvar dot-shared-directory
-    (return-if-file-exists "~/Google_Drive/notes"))
-
   ;; Add all subdirectories under ~/.emacs.d/site/ to the load path
   ;; https://www.emacswiki.org/emacs/LoadPath
   (when nil
@@ -199,6 +196,19 @@
       (setenv "JVM_OPTS" "-Dapple.awt.UIElement=true")))
 #+END_SRC
 
+* Setup Languagetool
+#+BEGIN_SRC emacs-lisp
+(setq-default langtool-language-tool-jar (cond
+                                          ((file-exists-p "~/.emacs.d/site/languagetool-commandline.jar")
+                                           "~/.emacs.d/site/languagetool-commandline.jar")
+                                          ((file-exists-p "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar")
+                                           "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar")
+                                          (t nil)))
+;; (setq-default langtool-java-classpath (cond
+;;                                        ((file-exists-p "~/.emacs.d/site/languagetool-commandline.jar")
+;;                                         "~/.emacs.d/site/*") 
+;;                                        (t nil)))
+#+END_SRC
 * Set encoding
 #+BEGIN_SRC emacs-lisp
   ;; Set UTF-8 as the default encoding for everything,
@@ -548,266 +558,271 @@
 
 ** Spelling & Grammar
 #+BEGIN_SRC emacs-lisp
-  ;; http://blog.binchen.org/posts/what-s-the-best-spell-check-set-up-in-emacs.html
+;; http://blog.binchen.org/posts/what-s-the-best-spell-check-set-up-in-emacs.html
 
-  ;; (defun flyspell-detect-ispell-args (&optional RUN-TOGETHER)
-  ;;   "if RUN-TOGETHER is true, spell check the CamelCase words"
-  ;;   (let (args)
-  ;;     (cond
-  ;;      ((string-match  "aspell$" ispell-program-name)
-  ;;       ;; force the English dictionary, support Camel Case spelling check
-  ;;       ;; (tested with aspell 0.6)
-  ;;       (setq args (list "--sug-mode=ultra" "--lang=en_US"))
-  ;;       (if RUN-TOGETHER
-  ;;           (setq args (append args '("--run-together"
-  ;;                                     "--run-together-limit=5"
-  ;;                                     "--run-together-min=2")))))
-  ;;      ((string-match "hunspell$" ispell-program-name)
-  ;;       (setq args nil)))
-  ;;     args))
+;; (defun flyspell-detect-ispell-args (&optional RUN-TOGETHER)
+;;   "if RUN-TOGETHER is true, spell check the CamelCase words"
+;;   (let (args)
+;;     (cond
+;;      ((string-match  "aspell$" ispell-program-name)
+;;       ;; force the English dictionary, support Camel Case spelling check
+;;       ;; (tested with aspell 0.6)
+;;       (setq args (list "--sug-mode=ultra" "--lang=en_US"))
+;;       (if RUN-TOGETHER
+;;           (setq args (append args '("--run-together"
+;;                                     "--run-together-limit=5"
+;;                                     "--run-together-min=2")))))
+;;      ((string-match "hunspell$" ispell-program-name)
+;;       (setq args nil)))
+;;     args))
 
-  ;; ispell-cmd-args is useless, it's the list of *extra* arguments we will
-  ;; append to the ispell process when "ispell-word" is called.
-  ;; ispell-extra-args is the command arguments which will *always* be
-  ;; used when start ispell process
-  ;; (setq ispell-extra-args (flyspell-detect-ispell-args t))
-  ;; (setq ispell-cmd-args (flyspell-detect-ispell-args))
-  ;; (defadvice ispell-word (around my-ispell-word activate)
-  ;;   (let ((old-ispell-extra-args ispell-extra-args))
-  ;;     (ispell-kill-ispell t)
-  ;;     (setq ispell-extra-args (flyspell-detect-ispell-args))
-  ;;     ad-do-it
-  ;;     (setq ispell-extra-args old-ispell-extra-args)
-  ;;     (ispell-kill-ispell t)
-  ;;     ))
+;; ispell-cmd-args is useless, it's the list of *extra* arguments we will
+;; append to the ispell process when "ispell-word" is called.
+;; ispell-extra-args is the command arguments which will *always* be
+;; used when start ispell process
+;; (setq ispell-extra-args (flyspell-detect-ispell-args t))
+;; (setq ispell-cmd-args (flyspell-detect-ispell-args))
+;; (defadvice ispell-word (around my-ispell-word activate)
+;;   (let ((old-ispell-extra-args ispell-extra-args))
+;;     (ispell-kill-ispell t)
+;;     (setq ispell-extra-args (flyspell-detect-ispell-args))
+;;     ad-do-it
+;;     (setq ispell-extra-args old-ispell-extra-args)
+;;     (ispell-kill-ispell t)
+;;     ))
 
-  ;; (defadvice flyspell-auto-correct-word (around my-flyspell-auto-correct-word
-  ;;                                               activate)
-  ;;   (let ((old-ispell-extra-args ispell-extra-args))
-  ;;     (ispell-kill-ispell t)
-  ;;     ;; use emacs original arguments
-  ;;     (setq ispell-extra-args (flyspell-detect-ispell-args))
-  ;;     ad-do-it
-  ;;     ;; restore our own ispell arguments
-  ;;     (setq ispell-extra-args old-ispell-extra-args)
-  ;;     (ispell-kill-ispell t)))
+;; (defadvice flyspell-auto-correct-word (around my-flyspell-auto-correct-word
+;;                                               activate)
+;;   (let ((old-ispell-extra-args ispell-extra-args))
+;;     (ispell-kill-ispell t)
+;;     ;; use emacs original arguments
+;;     (setq ispell-extra-args (flyspell-detect-ispell-args))
+;;     ad-do-it
+;;     ;; restore our own ispell arguments
+;;     (setq ispell-extra-args old-ispell-extra-args)
+;;     (ispell-kill-ispell t)))
 
-  (defvar use-spellcheck
-    ;;'auto
-    ;;'hunspell
-    'aspell
-    "Set the spell check back-end to use.")
+(defvar use-spellcheck
+  ;;'auto
+  ;;'hunspell
+  'aspell
+  "Set the spell check back-end to use.")
 
-  (defvar aspell-p nil)
-  (defvar hunspell-p nil)
-  (setq aspell-p (executable-find "aspell"))
-  (setq hunspell-p (executable-find "hunspell"))
+(defvar aspell-p nil)
+(defvar hunspell-p nil)
+(setq aspell-p (executable-find "aspell"))
+(setq hunspell-p (executable-find "hunspell"))
 
-  (defvar personal-dict "personal-dict.en")
+(defvar personal-dict "personal-dict.en")
 
-  (use-package flyspell
+(use-package flyspell
+  :ensure t
+  :defer t
+  :if (or aspell-p hunspell-p)
+  :diminish (flyspell-mode "Spell")
+  :init
+  (add-hook 'prog-mode-hook #'flyspell-prog-mode 'append)
+  (add-hook 'text-mode-hook #'flyspell-mode 'append)
+  :bind ("<f8>" . flyspell-buffer)
+  :config
+  (require 'ispell)
+  ;; Set to nil for performance
+  ;; https://www.emacswiki.org/emacs/FlySpell#toc3
+  ;;(setq-default flyspell-issue-message-flag nil)
+
+  ;; curl https://cgit.freedesktop.org/libreoffice/dictionaries/tree/en/en_US.dic --output en_US.dic
+  ;; curl https://cgit.freedesktop.org/libreoffice/dictionaries/tree/en/en_US.aff --output en_US.aff
+  ;;
+  ;; brew install aspell
+  ;; brew install hunspell
+  ;;
+  ;; Dictionary files (*.aff and *.dic) should be placed in
+  ;; ~/Library/Spelling/ or /Library/Spelling/.  Homebrew itself
+  ;; provides no dictionaries for Hunspell, but you can download
+  ;; compatible dictionaries from other sources, such as
+  ;; https://wiki.openoffice.org/wiki/Dictionaries .
+
+  (when (eq use-spellcheck 'auto)
+    (or (when hunspell-p
+          (setq use-spellcheck 'hunspell))
+        (when aspell-p
+          (setq use-spellcheck 'aspell))))
+
+  (when (file-exists-p (expand-file-name personal-dict personal-dir))
+    (setq-default ispell-personal-dictionary
+                  (expand-file-name "personal-dict.en"
+                                    personal-dir)))
+
+  ;;(setenv "LANG" "en_US")   ;;(getenv "LANG")
+  ;;(setenv "DICTIONARY" "en_US")   ;;(getenv "DICTIONARY")
+
+  (setenv "DICPATH" (expand-file-name
+                     "~/Library/Spelling"))
+
+  (cond 
+   ((and (eq use-spellcheck 'hunspell)
+         hunspell-p)
+    (setq-default
+     ispell-really-hunspell t
+     ispell-program-name "hunspell"
+     ;;ispell-extra-args '("-d en_US")
+     ispell-local-dictionary "en_US"
+     ispell-local-dictionary-alist
+     ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
+     ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+     '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
+       )))
+
+   ((and (eq use-spellcheck 'aspell)
+         aspell-p)
+    (setq-default
+     ispell-program-name "aspell"
+     ;; http://aspell.net/man-html/Notes-on-the-Different-Suggestion-Modes.html#Notes-on-the-Different-Suggestion-Modes
+     ispell-extra-args '("--sug-mode=slow" "--lang=en_US")
+     ispell-list-command "--list")))
+
+  ;; Save a new word to personal dictionary without asking
+  (setq ispell-silently-savep t)
+
+  ;; Extra flyspell delayed commands
+  (mapcar 'flyspell-delay-command '(scroll-up scroll-down
+                                              scroll-up-line
+                                              scroll-down-line
+                                              scroll-up1
+                                              scroll-down1))
+
+  (use-package writegood-mode
+    ;;https://github.com/bnbeckwith/writegood-mode
     :ensure t
     :defer t
-    :if (or aspell-p hunspell-p)
-    :diminish (flyspell-mode "Spell")
-    :init
-    (add-hook 'prog-mode-hook #'flyspell-prog-mode 'append)
-    (add-hook 'text-mode-hook #'flyspell-mode 'append)
-    :bind ("<f8>" . flyspell-buffer)
+    :init (add-hook 'text-mode-hook #'writegood-mode 'append))
+
+  (use-package langtool
+    ;; https://github.com/mhayashi1120/Emacs-langtool
+    ;; brew install languagetool
+    ;; which languagetool # to determine path to script
+    ;; less /path/to/languagetool # to determine path to languagetool-commandline.jar
+    :if (and (or gnu/linux-p osx-p)
+             langtool-language-tool-jar
+             ;; langtool-java-classpath
+             )
+    :ensure t
+    :defer t
+    ;; :init (add-hook 'text-mode-hook #'langtool-check 'append) 
     :config
-    (require 'ispell)
-    ;; Set to nil for performance
-    ;; https://www.emacswiki.org/emacs/FlySpell#toc3
-    ;;(setq-default flyspell-issue-message-flag nil)
+    (setq-default
+     ;; langtool-language-tool-jar (or (and gnu/linux-p
+     ;;                                     (file-exists-p "~/.emacs.d/site/languagetool-commandline.jar"))
+     ;;                                (and osx-p
+     ;;                                     (file-exists-p ;; ;;"/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar")))
+     langtool-mother-tongue "en"
+     langtool-default-language "en-US"
+     langtool-disabled-rules '("WHITESPACE_RULE"
+                               "EN_UNPAIRED_BRACKETS"
+                               "COMMA_PARENTHESIS_WHITESPACE"
+                               "EN_QUOTES")))
 
-    ;; curl https://cgit.freedesktop.org/libreoffice/dictionaries/tree/en/en_US.dic --output en_US.dic
-    ;; curl https://cgit.freedesktop.org/libreoffice/dictionaries/tree/en/en_US.aff --output en_US.aff
-    ;;
-    ;; brew install aspell
-    ;; brew install hunspell
-    ;;
-    ;; Dictionary files (*.aff and *.dic) should be placed in
-    ;; ~/Library/Spelling/ or /Library/Spelling/.  Homebrew itself
-    ;; provides no dictionaries for Hunspell, but you can download
-    ;; compatible dictionaries from other sources, such as
-    ;; https://wiki.openoffice.org/wiki/Dictionaries .
+  ;; (add-hook 'flyspell-mode-hook
+  ;;           #'(lambda ()
+  ;;             (if flyspell-mode
+  ;;                 (progn
+  ;;                   (flyspell-buffer)
+  ;;                   (local-set-key [(control /)]
+  ;;                                  #'flyspell-check-next-highlighted-word)
+  ;;                   (local-set-key [(control \,)]
+  ;;                                  #'flyspell-check-previous-highlighted-word))
+  ;;               (progn
+  ;;                 (local-unset-key [(control /)])
+  ;;                 (local-unset-key [(control \,)])))))
 
-    (when (eq use-spellcheck 'auto)
-      (or (when hunspell-p
-            (setq use-spellcheck 'hunspell))
-          (when aspell-p
-            (setq use-spellcheck 'aspell))))
+  ;; (defun flyspell-check-next-highlighted-word ()
+  ;;   "Custom function to spell check next highlighted word"
+  ;;   (interactive)
+  ;;   (flyspell-goto-next-error))
 
-    (when (file-exists-p (expand-file-name personal-dict personal-dir))
-      (setq-default ispell-personal-dictionary
-                    (expand-file-name "personal-dict.en"
-                                      personal-dir)))
+  ;; Pre http://emacswiki.org/emacs/InteractiveSpell#toc6,
+  ;; Fixes the ispell-phaf: No matching entry for nil. error
 
-    ;;(setenv "LANG" "en_US")   ;;(getenv "LANG")
-    ;;(setenv "DICTIONARY" "en_US")   ;;(getenv "DICTIONARY")
+  ;;(setq-default ispell-program-name (executable-find "hunspell"))
+  ;; (ispell-change-dictionary "en_US" t)
+  ;; (ispell-change-dictionary "american" t)
 
-    (setenv "DICPATH" (expand-file-name
-                       "~/Library/Spelling"))
+  ;;(setq ispell-dictionary "american")
+  ;;(setq ispell-extra-args '("-i" "utf-8"))
 
-    (cond 
-     ((and (eq use-spellcheck 'hunspell)
-           hunspell-p)
-      (setq-default
-       ispell-really-hunspell t
-       ispell-program-name "hunspell"
-       ;;ispell-extra-args '("-d en_US")
-       ispell-local-dictionary "en_US"
-       ispell-local-dictionary-alist
-       ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
-       ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
-       '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
-         )))
+  ;; (add-to-list 'ispell-local-dictionary-alist
+  ;;              (list "american"
+  ;;                 "[[:alpha:]]"
+  ;;                 "[^[:alpha:]]"
+  ;;                 "[']"
+  ;;                 t
+  ;;                 `("-d" "en_US" ;; ,personal-dict
+  ;;                      )
+  ;;                 nil
+  ;;                 'utf-8) t)
 
-     ((and (eq use-spellcheck 'aspell)
-           aspell-p)
-      (setq-default
-       ispell-program-name "aspell"
-       ;; http://aspell.net/man-html/Notes-on-the-Different-Suggestion-Modes.html#Notes-on-the-Different-Suggestion-Modes
-       ispell-extra-args '("--sug-mode=slow" "--lang=en_US")
-       ispell-list-command "--list")))
+  ;; (setq ispell-personal-dictionary personal-dict)
 
-    ;; Save a new word to personal dictionary without asking
-    (setq ispell-silently-savep t)
+  ;;(setq ispell-local-dictionary "en_US")
+  ;; (setq ispell-local-dictionary-alist
+  ;;       '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil nil nil utf-8)))
 
-    ;; Extra flyspell delayed commands
-    (mapcar 'flyspell-delay-command '(scroll-up scroll-down
-                                                scroll-up-line
-                                                scroll-down-line
-                                                scroll-up1
-                                                scroll-down1))
+  )
 
-    (use-package writegood-mode
-      ;;https://github.com/bnbeckwith/writegood-mode
-      :ensure t
-      :defer t
-      :init (add-hook 'text-mode-hook #'writegood-mode 'append))
+;;(setq ispell-local-dictionary-alist nil)
 
-    (use-package langtool
-      ;; https://github.com/mhayashi1120/Emacs-langtool
-      ;; brew install languagetool
-      ;; which languagetool # to determine path to script
-      ;; less /path/to/languagetool # to determine path to languagetool-commandline.jar
-      :if (and osx-p
-               (file-exists-p "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar"))
-      :ensure t
-      :defer t
-      ;; :init (add-hook 'text-mode-hook #'langtool-check 'append) 
-      :config
-      (setq-default
-       langtool-language-tool-jar "/usr/local/Cellar/languagetool/3.5/libexec/languagetool-commandline.jar"
-       langtool-mother-tongue "en"
-       langtool-default-language "en-US"
-       langtool-disabled-rules '("WHITESPACE_RULE"
-                                 "EN_UNPAIRED_BRACKETS"
-                                 "COMMA_PARENTHESIS_WHITESPACE"
-                                 "EN_QUOTES")))
+;; Replace ispell with hunspell
+(when nil
+  ;;(setq ispell-really-hunspell t)
 
-    ;; (add-hook 'flyspell-mode-hook
-    ;;           #'(lambda ()
-    ;;             (if flyspell-mode
-    ;;                 (progn
-    ;;                   (flyspell-buffer)
-    ;;                   (local-set-key [(control /)]
-    ;;                                  #'flyspell-check-next-highlighted-word)
-    ;;                   (local-set-key [(control \,)]
-    ;;                                  #'flyspell-check-previous-highlighted-word))
-    ;;               (progn
-    ;;                 (local-unset-key [(control /)])
-    ;;                 (local-unset-key [(control \,)])))))
+  ;;(setq ispell-dictionary "american-hunspell")
+  ;;(setq ispell-extra-args '("-a" "-i" "utf-8"))
 
-    ;; (defun flyspell-check-next-highlighted-word ()
-    ;;   "Custom function to spell check next highlighted word"
-    ;;   (interactive)
-    ;;   (flyspell-goto-next-error))
+  ;;(setq ispell-extra-args '("-i" "utf-8"))
 
-    ;; Pre http://emacswiki.org/emacs/InteractiveSpell#toc6,
-    ;; Fixes the ispell-phaf: No matching entry for nil. error
+  ;;(setq ispell-extra-args nil)
+  ;; (add-to-list 'ispell-local-dictionary-alist
+  ;;              (list "american-hunspell"
+  ;;                    "[[:alpha:]]"
+  ;;                    "[^[:alpha:]]"
+  ;;                    "[']"
+  ;;                    t
+  ;;                    (list "-d" 
+  ;;                          (expand-file-name "dict/en_US" 
+  ;;                                            use-hunspell))
+  ;;                    nil
+  ;;                    'utf-8))
 
-    ;;(setq-default ispell-program-name (executable-find "hunspell"))
-    ;; (ispell-change-dictionary "en_US" t)
-    ;; (ispell-change-dictionary "american" t)
+  ;; (add-to-list 'ispell-local-dictionary-alist
+  ;;              (list "american-hunspell"
+  ;;                 "[[:alpha:]]"
+  ;;                 "[^[:alpha:]]"
+  ;;                 "[']"
+  ;;                 t
+  ;;                 (list "-d" "en_US")
+  ;;                 ;;`("-d" "en_US" ,personal-dict)
+  ;;                 nil
+  ;;                 'iso-8859-1))
 
-    ;;(setq ispell-dictionary "american")
-    ;;(setq ispell-extra-args '("-i" "utf-8"))
-
-    ;; (add-to-list 'ispell-local-dictionary-alist
-    ;;              (list "american"
-    ;;                 "[[:alpha:]]"
-    ;;                 "[^[:alpha:]]"
-    ;;                 "[']"
-    ;;                 t
-    ;;                 `("-d" "en_US" ;; ,personal-dict
-    ;;                      )
-    ;;                 nil
-    ;;                 'utf-8) t)
-
-    ;; (setq ispell-personal-dictionary personal-dict)
-
-    ;;(setq ispell-local-dictionary "en_US")
-    ;; (setq ispell-local-dictionary-alist
-    ;;       '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil nil nil utf-8)))
-
-    )
-
-  ;;(setq ispell-local-dictionary-alist nil)
-
-  ;; Replace ispell with hunspell
-  (when nil
-    ;;(setq ispell-really-hunspell t)
-
-    ;;(setq ispell-dictionary "american-hunspell")
-    ;;(setq ispell-extra-args '("-a" "-i" "utf-8"))
-
-    ;;(setq ispell-extra-args '("-i" "utf-8"))
-
-    ;;(setq ispell-extra-args nil)
-    ;; (add-to-list 'ispell-local-dictionary-alist
-    ;;              (list "american-hunspell"
-    ;;                    "[[:alpha:]]"
-    ;;                    "[^[:alpha:]]"
-    ;;                    "[']"
-    ;;                    t
-    ;;                    (list "-d" 
-    ;;                          (expand-file-name "dict/en_US" 
-    ;;                                            use-hunspell))
-    ;;                    nil
-    ;;                    'utf-8))
-
-    ;; (add-to-list 'ispell-local-dictionary-alist
-    ;;              (list "american-hunspell"
-    ;;                 "[[:alpha:]]"
-    ;;                 "[^[:alpha:]]"
-    ;;                 "[']"
-    ;;                 t
-    ;;                 (list "-d" "en_US")
-    ;;                 ;;`("-d" "en_US" ,personal-dict)
-    ;;                 nil
-    ;;                 'iso-8859-1))
-
-    ;; (add-to-list 'ispell-dictionary-alist
-    ;;              '("american-hunspell"
-    ;;                "[[:alpha:]]"
-    ;;                "[^[:alpha:]]"
-    ;;                "[']"
-    ;;                t
-    ;;                ("-d" "en_US")
-    ;;                nil
-    ;;                iso-8859-1))
-    ;; (add-to-list 'ispell-dictionary-alist
-    ;;              '(nil
-    ;;                "[[:alpha:]]"
-    ;;                "[^[:alpha:]]"
-    ;;                "[']"
-    ;;                t
-    ;;                ("-d" "en_US")
-    ;;                nil
-    ;;                iso-8859-1))
-    )
+  ;; (add-to-list 'ispell-dictionary-alist
+  ;;              '("american-hunspell"
+  ;;                "[[:alpha:]]"
+  ;;                "[^[:alpha:]]"
+  ;;                "[']"
+  ;;                t
+  ;;                ("-d" "en_US")
+  ;;                nil
+  ;;                iso-8859-1))
+  ;; (add-to-list 'ispell-dictionary-alist
+  ;;              '(nil
+  ;;                "[[:alpha:]]"
+  ;;                "[^[:alpha:]]"
+  ;;                "[']"
+  ;;                t
+  ;;                ("-d" "en_US")
+  ;;                nil
+  ;;                iso-8859-1))
+  )
 #+END_SRC
 
 ** Scrolling without moving the point
@@ -1143,10 +1158,10 @@
   :config (recentf-mode 1))
 
 (use-package flycheck ;;https://github.com/flycheck/flycheck  
-  :if osx-p
+  :if (or osx-p gnu/linux-p)
   :ensure t
   :defer t
-  ;;  :diminish (flycheck-mode "Fly")
+ :diminish (flycheck-mode "Fly")
   :init (add-hook 'prog-mode-hook #'flycheck-mode 'append)
   :config
   ;; (setq-default flycheck-highlighting-mode 'lines)
@@ -1154,7 +1169,7 @@
   (setq-default flycheck-indication-mode 'right-fringe))
 
 (use-package diff-hl
-  :if (and osx-p (display-graphic-p)) ;;Broken windows  
+  :if (and (display-graphic-p) (or osx-p gnu/linux-p)) ;;Broken windows  
   :ensure t
   :defer t
   :init
@@ -1237,17 +1252,13 @@
   :commands deft
   :defer t
   :config
-  (add-to-list 'auto-mode-alist '("/notes/.*\\.txt\\'" . markdown-mode))
-  (setq deft-extensions '("txt" "org" "rst" "tex")
-        deft-recursive t)
+  (add-to-list 'auto-mode-alist '("/.deft/.*\\.txt\\'" . markdown-mode))
+  ;;(setq deft-extensions '("txt" "org" "rst" "tex")
+  ;;      deft-recursive t)
   (setf deft-directory
-        (cond
-         ((file-exists-p dot-shared-directory)
-          dot-shared-directory)
-         ((file-exists-p "~/Documents/EDS/eds_tasks")
-          "~/Documents/EDS/eds_tasks")
-         ((file-exists-p "~/.deft")
-          "~/.deft"))))
+        (cond 
+         ((file-exists-p "~/Documents/.deft")
+          "~/Documents/.deft"))))
 
 (use-package popup
   :disabled t
@@ -1520,7 +1531,7 @@
   ;;(add-to-list 'org-latex-packages-alist '("" "listings"))
 
   (setq org-src-fontify-natively t) ; Syntax highlight within code blocks.
-  (setq org-src-tab-acts-natively nil)  ; 't' makes tab behave like it
+  (setq org-src-tab-acts-natively t)    ; 't' makes tab behave like it
                                         ; does in the corresponding
                                         ; major mode.
   (setq org-src-preserve-indentation t)
@@ -2384,11 +2395,13 @@
   :ensure t
   :defer t
   :config
+  (add-to-list 'wttrin-default-cities "Burbank")
   (add-to-list 'wttrin-default-cities "Los Angeles")
   (add-to-list 'wttrin-default-cities "Torrance")
   (add-to-list 'wttrin-default-cities "London")
   (add-to-list 'wttrin-default-cities "LAX")
-  (add-to-list 'wttrin-default-cities "Cape Town"))
+  (add-to-list 'wttrin-default-cities "Cape Town")
+  (setq-default wttrin-default-accept-language '("Accept-Language" . "en-US,en;q=0.8")))
 
 (use-package doc-view
   ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Document-View.html
@@ -2448,7 +2461,8 @@
   :config
   ;; Set fortune-cookie-cowsay-args within M-x customize to change
   ;; cowsay defaults
-  (setq fortune-cookie-cowsay-args "-f ghostbusters -s"))
+  (setq fortune-cookie-cowsay-args "-f ghostbusters -s")
+  (setq fortune-cookie-cowsay-enable t))
 
 (use-package command-log-mode
   ;;https://github.com/lewang/command-log-mode
