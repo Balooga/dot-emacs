@@ -83,3 +83,16 @@
 (setf stumpwm:*screen-mode-line-format*
       (list "%w | "
             '(:eval (stumpwm:run-shell-command "date" t))))
+
+(set-fg-color "GreenYellow")
+(set-bg-color "#001921")
+(set-msg-border-width 1)
+(set-border-color "#001921")
+(setf *message-window-padding* 50)
+(setf *message-window-gravity* :top
+      *input-window-gravity* :top)
+
+(set-font "-b&h-lucidatypewriter-medium-r-normal-sans-11-80-100-100-m-70-iso10646-1")
+;;(set-unfocus-color "darkgray")
+;;(setf *window-border-style* :thin)
+
