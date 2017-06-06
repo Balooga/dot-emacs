@@ -1,3 +1,4 @@
 .DS_Store
 /.emacs.d/emacs.el
 /.emacs.d/site/plantuml.jar
+/.stumpwm.d/modules/

@@ -336,6 +336,8 @@ you should place your code here."
  ;;       deft-recursive t)
   (setf deft-directory
         (cond
+         ((file-exists-p "~/Documents/Documents/.deft")
+          "~/Documents/Documents/.deft")
          ((file-exists-p "~/Documents/.deft")
           "~/Documents/.deft")
          ((file-exists-p "~/.deft")
