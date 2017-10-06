@@ -385,6 +385,9 @@ you should place your code here."
   
   ;; Spacemacs as the editor for editing Git commits
   (global-git-commit-mode t)
+
+  ;; Change from days to hours for org clocktime
+  (setq org-time-clocksum-use-fractional t)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
