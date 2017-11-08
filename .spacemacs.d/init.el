@@ -387,10 +387,12 @@ you should place your code here."
   (add-hook 'c++-mode-hook 'clang-format-bindings)
   (defun clang-format-bindings ()
     (define-key c++-mode-map [tab] 'clang-format-buffer))
-
   ;; Spacemacs as the editor for editing Git commits
   (global-git-commit-mode t)
-  )
+  
+  ;; Change from days to hours for org clocktime
+  (setq org-time-clocksum-use-fractional t)
+)
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
