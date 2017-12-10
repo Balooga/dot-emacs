@@ -50,14 +50,15 @@ values."
      helm
      auto-completion
      better-defaults
-     (markdown :variables
-               markdown-live-preview-engine 'vmd)
+     emacs-lisp
+     git
+     (markdown :variables markdown-live-preview-engine 'vmd)
      (org :variables
           org-enable-github-support t
           org-enable-reveal-js-support t
           org-reveal-root (cond
-                           ((file-exists-p "~/spacemacs/site/reveal.js")
-                            "~/spacemacs/site/reveal.js")
+                           ((file-exists-p "~/.spacemacs.d/site/reveal.js")
+                            "~/.spacemacs.d/site/reveal.js")
                            ((file-exists-p "~/.reveal.js")
                             "~/.reveal.js")))
      (shell :variables
@@ -74,9 +75,9 @@ values."
      selectric
      speed-reading
      plantuml
-     (clojure :variables
-              clojure-enable-fancify-symbols t)
+     (clojure :variables clojure-enable-fancify-symbols t)
      yaml
+     htmlize
      ;;centered-buffer-mode
      ;; osx
      )
