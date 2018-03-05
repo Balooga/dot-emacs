@@ -47,7 +47,7 @@ values."
             ;;c-c++-default-mode-for-headers 'c++-mode
             )
      php
-     python
+     (python :variables python-test-runner 'pytest)
      html
      ruby
      helm
@@ -58,6 +58,8 @@ values."
      (markdown :variables
                markdown-live-preview-engine 'vmd)
      (org :variables
+          org-enable-github-support t
+          org-enable-reveal-js-support t
           org-reveal-root (cond
                            ((file-exists-p "~/.spacemacs.d/site/reveal.js")
                             "~/.spacemacs.d/site/reveal.js")
