@@ -59,6 +59,9 @@ values."
      (markdown :variables
                markdown-live-preview-engine 'vmd)
      (org :variables
+          org-babel-load-languages '((plantuml . t))
+          org-confirm-babel-evaluate nil
+          org-plantuml-jar-path "~/.vagrant-installation/plantuml.jar"
           org-enable-github-support t
           org-enable-reveal-js-support t
           org-reveal-root (cond
@@ -392,7 +395,7 @@ you should place your code here."
 
   ;; PlantUML configurations
   ;; https://github.com/skuro/plantuml-mode
-  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.spacemacs.d/site/plantuml/"))
+  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.vagrant-installation/plantuml.jar"))
 
   ;;
   ;; Centered Buffer Mode
