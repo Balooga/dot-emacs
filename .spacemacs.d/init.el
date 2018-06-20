@@ -96,6 +96,7 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '(
+                                      org-plus-contrib
                                       yasnippet-snippets
                                       wttrin
                                       )
@@ -397,7 +398,7 @@ you should place your code here."
 
   ;; PlantUML configurations
   ;; https://github.com/skuro/plantuml-mode
-  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.vagrant-installation/plantuml.jar"))
+  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.vagrant-installation/"))
 
   ;;
   ;; Centered Buffer Mode
@@ -415,6 +416,7 @@ you should place your code here."
   
   ;; Change from days to hours for org clocktime
   (setq org-time-clocksum-use-fractional t)
+  (require 'ox-taskjuggler)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
