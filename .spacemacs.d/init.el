@@ -61,6 +61,9 @@ values."
      (markdown :variables
                markdown-live-preview-engine 'vmd)
      (org :variables
+          org-babel-load-languages '((plantuml . t))
+          org-confirm-babel-evaluate nil
+          org-plantuml-jar-path "~/.vagrant-installation/plantuml.jar"
           org-enable-github-support t
           org-enable-reveal-js-support t
           org-reveal-root (cond
@@ -94,17 +97,20 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '(
+                                      org-plus-contrib
                                       yasnippet-snippets
                                       wttrin
                                       )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages '(firebelly-theme
+   dotspacemacs-excluded-packages '(
+                                    firebelly-theme
                                     niflheim-theme
                                     pastels-on-dark-theme
                                     tronesque-theme
-                                    zonokai-theme)
+                                    zonokai-theme
+                                    )
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
    ;; `used-only' installs only explicitly used packages and uninstall any
@@ -172,8 +178,11 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(spacemacs-dark leuven zenburn
-                         spacemacs-light)
+   dotspacemacs-themes '(
+                         spacemacs-dark
+                         leuven zenburn
+                         spacemacs-light
+                         )
    ;; If non nil the cursor color matches the state color in GUI Emacs.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
@@ -306,9 +315,9 @@ values."
    ;;   :size-limit-kb 1000)
    ;; (default nil)
    dotspacemacs-line-numbers '(:relative nil
-                                          :enabled-for-modes prog-mode
-                                          :disabled-for-modes c-mode c++-mode
-                                          :size-limit-kb 1000)
+                                         :enabled-for-modes prog-mode
+                                         :disabled-for-modes c-mode c++-mode
+                                         :size-limit-kb 1000)
    ;; Code folding method. Possible values are `evil' and `origami'.
    ;; (default 'evil)
    dotspacemacs-folding-method 'evil
@@ -395,7 +404,7 @@ you should place your code here."
 
   ;; PlantUML configurations
   ;; https://github.com/skuro/plantuml-mode
-  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.spacemacs.d/site/plantuml/"))
+  (setq plantuml-jar-path (expand-file-name "plantuml.jar" "~/.vagrant-installation/"))
 
   ;;
   ;; Centered Buffer Mode
@@ -410,9 +419,10 @@ you should place your code here."
     (define-key c++-mode-map [tab] 'clang-format-buffer))
   ;; Spacemacs as the editor for editing Git commits
   (global-git-commit-mode t)
-  
+
   ;; Change from days to hours for org clocktime
   (setq org-time-clocksum-use-fractional t)
+  (require 'ox-taskjuggler)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
