@@ -61,7 +61,11 @@ values."
      (markdown :variables
                markdown-live-preview-engine 'vmd)
      (org :variables
-          org-babel-load-languages '((plantuml . t))
+          org-babel-load-languages '(
+                                     (ditaa . t)
+                                     (plantuml . t)
+                                     (emacs-lisp . t)
+                                     )
           org-confirm-babel-evaluate nil
           org-plantuml-jar-path "~/.vagrant-installation/plantuml.jar"
           org-enable-github-support t
@@ -358,6 +362,7 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
+  (setq sentence-end-double-space t)
   )
 
 (defun dotspacemacs/user-config ()
@@ -423,6 +428,10 @@ you should place your code here."
   ;; Change from days to hours for org clocktime
   (setq org-time-clocksum-use-fractional t)
   (require 'ox-taskjuggler)
+ 
+  (use-package increment-numbers
+    :disabled j
+    :ensure t)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
