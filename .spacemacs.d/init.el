@@ -74,7 +74,9 @@ values."
                            ((file-exists-p "~/.spacemacs.d/site/reveal.js")
                             "~/.spacemacs.d/site/reveal.js")
                            ((file-exists-p "~/.reveal.js")
-                            "~/.reveal.js")))
+                            "~/.reveal.js"))
+          org-ditaa-jar-path "~/.spacemacs.d/site/ditaa.jar"
+          )
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
