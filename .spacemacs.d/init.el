@@ -435,7 +435,9 @@ you should place your code here."
     :disabled j
     :ensure t)
 
-  (setq wttrin-default-accept-language '("Accept-Language" . "en-US,en"))
+  (setq
+   wttrin-default-accept-language '("Accept-Language" . "en-US,en")
+   wttrin-default-cities '("Los Angeles" "Torrance" "Burbank" "Palm Springs" "Reno" "Cape Town" "Las Vegas"))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
