@@ -434,6 +434,8 @@ you should place your code here."
   (use-package increment-numbers
     :disabled j
     :ensure t)
+
+  (setq wttrin-default-accept-language '("Accept-Language" . "en-US,en"))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
