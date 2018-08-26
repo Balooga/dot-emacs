@@ -467,6 +467,4 @@ you should place your code here."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:background nil))))
- '(company-tooltip-common ((t (:inherit company-tooltip :background "#34323e" :foreground "#b2b2b2" :underline nil :weight bold))))
- '(company-tooltip-common-selection ((t (:inherit company-tooltip-selection :foreground "#b2b2b2" :underline nil :weight bold)))))
+ )
