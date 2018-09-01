@@ -434,15 +434,15 @@ you should place your code here."
   ;; Change from days to hours for org clocktime
   (setq org-time-clocksum-use-fractional t)
   (require 'ox-taskjuggler)
- 
+
   (use-package increment-numbers
-    :disabled j
+    :disabled t
     :ensure t)
 
   (setq
    wttrin-default-accept-language '("Accept-Language" . "en-US,en")
    wttrin-default-cities '("Los Angeles" "Torrance" "Burbank" "Palm Springs" "Reno" "Cape Town" "Las Vegas"))
-  
+
   (add-hook 'doc-view-mode-hook 'auto-revert-mode)
 
   ;; https://github.com/politza/pdf-tools/issues/211#issuecomment-225645775
