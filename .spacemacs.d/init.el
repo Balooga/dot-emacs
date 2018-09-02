@@ -198,8 +198,8 @@ values."
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
    dotspacemacs-default-font '("Source Code Pro"
-                               :size 13
-                               :weight normal
+                               :size 11
+                               :weight light
                                :width normal
                                :powerline-scale 1.1)
    ;; The leader key
@@ -453,6 +453,8 @@ you should place your code here."
   ;; refresh buffer
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
+
+  (setq dotspacemacs-mode-line-unicode-symbols nil)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
