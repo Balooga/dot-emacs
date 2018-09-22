@@ -385,6 +385,9 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+  (when (eq 'darwin system-type)
+    (setq inferior-lisp-program "/usr/local/bin/ccl64"))
+
   (setq mu4e-account-alist
         '(("gmail"
            ;; Under each account, set the account-specific variables you want.
