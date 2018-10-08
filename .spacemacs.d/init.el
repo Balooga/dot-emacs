@@ -44,7 +44,10 @@ values."
             latex-enable-auto-fill t
             latex-enable-folding t)
      scheme
-     (go :variables go-use-gometalinter t)
+     (go :variables
+         go-use-gometalinter t
+         flycheck-gometalinter-deadline "15s" ;; https://github.com/syl20bnr/spacemacs/issues/9654
+         )
      racket
      javascript
      common-lisp
