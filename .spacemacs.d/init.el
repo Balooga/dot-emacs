@@ -73,6 +73,7 @@ values."
                markdown-live-preview-engine 'vmd)
      (org :variables
           org-babel-load-languages '(
+                                     (go . t)
                                      (ditaa . t)
                                      (plantuml . t)
                                      (emacs-lisp . t)
