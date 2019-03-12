@@ -210,7 +210,7 @@ values."
    ;; quickly tweak the mode-line size to make separators look not too crappy.
    dotspacemacs-default-font '("Source Code Pro"
                                :size 11
-                               :weight light
+                               :weight normal
                                :width normal
                                :powerline-scale 1.2)
    ;; The leader key
@@ -508,7 +508,12 @@ you should place your code here."
             #'TeX-revert-document-buffer)
 
   ;; (setq dotspacemacs-mode-line-unicode-symbols nil)
-)
+
+  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
