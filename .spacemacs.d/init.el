@@ -327,18 +327,25 @@ values."
    ;; `text-mode' derivatives. If set to `relative', line numbers are relative.
    ;; This variable can also be set to a property list for finer control:
    ;; '(:relative nil
-   ;;   :disabled-for-modes dired-mode
-   ;;                       doc-view-mode
-   ;;                       markdown-mode
-   ;;                       org-mode
-   ;;                       pdf-view-mode
-   ;;                       text-mode
-   ;;   :size-limit-kb 1000)
+   ;;             :disabled-for-modes dired-mode
+   ;;             doc-view-mode
+   ;;             markdown-mode
+   ;;             org-mode
+   ;;             pdf-view-mode
+   ;;             text-mode
+   ;;             :size-limit-kb 1000)
    ;; (default nil)
-   dotspacemacs-line-numbers '(:relative nil
-                                         :enabled-for-modes prog-mode
-                                         :disabled-for-modes c-mode c++-mode pdf-viewpmode
-                                         :size-limit-kb 1000)
+   dotspacemacs-line-numbers
+   '(:relative nil
+               :disabled-for-modes
+               dired-mode
+               doc-view-mode
+               markdown-mode
+               org-mode
+               pdf-view-mode
+               text-mode
+               :size-limit-kb 1000
+               )
    ;; Code folding method. Possible values are `evil' and `origami'.
    ;; (default 'evil)
    dotspacemacs-folding-method 'evil
@@ -462,6 +469,10 @@ you should place your code here."
     :config (setq-default olivetti-body-width 120))
 
   (add-hook 'text-mode-hook #'visual-line-mode)
+
+  ;; Need to add this explicitly, as :disabled-for-modes in dotspacemacs-line-numbers
+  ;; does not seem to work
+  (add-hook 'pdf-view-mode-hook (lambda () (linum-mode -1)))
 
   ;; OSX layer configurations
   ;; TBD
