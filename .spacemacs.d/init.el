@@ -36,6 +36,8 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
+     ;;lsp
+     ;;protobuf
      (mu4e :variables
            mu4e-installation-path "/usr/share/emacs/site-lisp"
            mu4e-account-alist t)
@@ -45,8 +47,10 @@ values."
             latex-enable-folding t)
      scheme
      (go :variables
-         go-use-gometalinter t
-         flycheck-gometalinter-deadline "15s" ;; https://github.com/syl20bnr/spacemacs/issues/9654
+         ;;go-backend 'lsp
+         go-use-golangci-lint t
+         ;;go-use-gometalinter t
+         ;;flycheck-gometalinter-deadline "15s" ;; https://github.com/syl20bnr/spacemacs/issues/9654
          )
      racket
      javascript
