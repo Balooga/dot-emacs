@@ -38,6 +38,7 @@ values."
      ;; ----------------------------------------------------------------
      ;;lsp
      ;;protobuf
+     gtags
      (mu4e :variables
            mu4e-installation-path "/usr/share/emacs/site-lisp"
            mu4e-account-alist t)
