@@ -6,11 +6,14 @@
 https://bitbucket.org/mituharu/emacs-mac/overview
 https://github.com/railwaycat/homebrew-emacsmacport
 
+
 ```bash
-$ brew tap railwaycat/emacsmacport
-$ brew install emacs-mac
-$ brew link emacs-mac
-$ brew linkapps emacs-mac
+brew tap railwaycat/emacsmacport
+brew install emacs-mac
+brew link emacs-mac
+brew linkapps emacs-mac
+brew tap homebrew/cask-fonts && brew cask install font-source-code-pro
+npm install --global tern
 ```
 
 Note: to determine the location of “emacs-mac”, use;
@@ -30,7 +33,6 @@ open /Applications/Emacs.app --args --debug-init
 
 open /Applications/Emacs.app --args --no-init-file
 ```
-
 
 ## Cowsay 
 
