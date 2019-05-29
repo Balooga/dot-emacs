@@ -50,6 +50,8 @@ values."
      (go :variables
          ;;go-backend 'lsp
          go-use-golangci-lint t
+         godoc-at-point-function 'godoc-gogetdoc
+         go-format-before-save t
          ;;go-use-gometalinter t
          ;;flycheck-gometalinter-deadline "15s" ;; https://github.com/syl20bnr/spacemacs/issues/9654
          )
