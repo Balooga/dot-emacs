@@ -36,8 +36,8 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     ;;lsp
-     ;;protobuf
+     lsp
+     protobuf
      gtags
      (mu4e :variables
            mu4e-installation-path "/usr/share/emacs/site-lisp"
@@ -48,7 +48,7 @@ values."
             latex-enable-folding t)
      scheme
      (go :variables
-         ;;go-backend 'lsp
+         go-backend 'lsp
          go-use-golangci-lint t
          godoc-at-point-function 'godoc-gogetdoc
          go-format-before-save t
@@ -59,6 +59,7 @@ values."
      javascript
      common-lisp
      pdf-tools
+     pdf
      cscope
      gtags
      semantic
@@ -417,7 +418,7 @@ you should place your code here."
            (user-mail-address "luke@balooga.com")
            (user-full-name "Luke Crook"))
           ))
-  (mu4e/mail-account-reset)
+  ;;(mu4e/mail-account-reset)
 
 ;;; Set up some common mu4e variables
   (setq mu4e-maildir "~/.mail"
@@ -529,9 +530,11 @@ you should place your code here."
 
   ;; (setq dotspacemacs-mode-line-unicode-symbols nil)
 
-  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
-  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+  ;; (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+  ;; (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+  ;; (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+  ;;(add-hook 'go-mode-hook #'lsp)
 
   )
 
