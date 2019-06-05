@@ -39,9 +39,9 @@ values."
      lsp
      protobuf
      gtags
-     (mu4e :variables
-           mu4e-installation-path "/usr/share/emacs/site-lisp"
-           mu4e-account-alist t)
+     ;; (mu4e :variables
+     ;;       mu4e-installation-path "/usr/share/emacs/site-lisp"
+     ;;       mu4e-account-alist t)
      (latex :variables
             latex-build-command "LaTeX"
             latex-enable-auto-fill t
@@ -409,44 +409,44 @@ you should place your code here."
   (when (eq 'darwin system-type)
     (setq inferior-lisp-program "/usr/local/bin/ccl64"))
 
-  (setq mu4e-account-alist
-        '(("gmail"
-           ;; Under each account, set the account-specific variables you want.
-           (mu4e-sent-messages-behavior delete)
-           (mu4e-sent-folder "/gmail/[Gmail]/.Sent Mail")
-           (mu4e-drafts-folder "/gmail/[Gmail]/.Drafts")
-           (user-mail-address "luke@balooga.com")
-           (user-full-name "Luke Crook"))
-          ))
+  ;; (setq mu4e-account-alist
+  ;;       '(("gmail"
+  ;;          ;; Under each account, set the account-specific variables you want.
+  ;;          (mu4e-sent-messages-behavior delete)
+  ;;          (mu4e-sent-folder "/gmail/[Gmail]/.Sent Mail")
+  ;;          (mu4e-drafts-folder "/gmail/[Gmail]/.Drafts")
+  ;;          (user-mail-address "luke@balooga.com")
+  ;;          (user-full-name "Luke Crook"))
+  ;;         ))
   ;;(mu4e/mail-account-reset)
 
 ;;; Set up some common mu4e variables
-  (setq mu4e-maildir "~/.mail"
-        mu4e-trash-folder "/Trash"
-        mu4e-refile-folder "/Archive"
-        mu4e-get-mail-command "mbsync -a"
-        mu4e-update-interval nil
-        mu4e-compose-signature-auto-include nil
-        mu4e-view-show-images t
-        mu4e-view-show-addresses t)
+  ;; (setq mu4e-maildir "~/.mail"
+  ;;       mu4e-trash-folder "/Trash"
+  ;;       mu4e-refile-folder "/Archive"
+  ;;       mu4e-get-mail-command "mbsync -a"
+  ;;       mu4e-update-interval nil
+  ;;       mu4e-compose-signature-auto-include nil
+  ;;       mu4e-view-show-images t
+  ;;       mu4e-view-show-addresses t)
 
 ;;; Mail directory shortcuts
-  (setq mu4e-maildir-shortcuts
-        '(("/gmail/INBOX" . ?g)
-          ))
+  ;; (setq mu4e-maildir-shortcuts
+  ;;       '(("/gmail/INBOX" . ?g)
+  ;;         ))
 
 ;;; Bookmarks
-  (setq mu4e-bookmarks
-        `(("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
-          ("date:today..now" "Today's messages" ?t)
-          ("date:7d..now" "Last 7 days" ?w)
-          ("mime:image/*" "Messages with images" ?p)
-          (,(mapconcat 'identity
-                       (mapcar
-                        (lambda (maildir)
-                          (concat "maildir:" (car maildir)))
-                        mu4e-maildir-shortcuts) " OR ")
-           "All inboxes" ?i)))
+  ;; (setq mu4e-bookmarks
+  ;;       `(("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
+  ;;         ("date:today..now" "Today's messages" ?t)
+  ;;         ("date:7d..now" "Last 7 days" ?w)
+  ;;         ("mime:image/*" "Messages with images" ?p)
+  ;;         (,(mapconcat 'identity
+  ;;                      (mapcar
+  ;;                       (lambda (maildir)
+  ;;                         (concat "maildir:" (car maildir)))
+  ;;                       mu4e-maildir-shortcuts) " OR ")
+  ;;          "All inboxes" ?i)))
 
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
