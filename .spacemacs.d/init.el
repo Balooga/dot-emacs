@@ -52,13 +52,16 @@ values."
          go-use-golangci-lint t
          godoc-at-point-function 'godoc-gogetdoc
          go-format-before-save t
+         lsp-ui-doc-include-signature t
+         lsp-ui-sideline-show-symbol t
+         go-tab-width 2
          ;;go-use-gometalinter t
          ;;flycheck-gometalinter-deadline "15s" ;; https://github.com/syl20bnr/spacemacs/issues/9654
          )
      racket
      javascript
      common-lisp
-     pdf-tools
+     ;;pdf-tools
      pdf
      cscope
      gtags
@@ -515,7 +518,7 @@ you should place your code here."
 
   (setq
    wttrin-default-accept-language '("Accept-Language" . "en-US,en")
-   wttrin-default-cities '("Los Angeles" "Torrance" "Burbank" "Palm Springs" "Reno" "Cape Town" "Las Vegas"))
+   wttrin-default-cities '("Los Angeles" "Torrance" "Westwood" "Burbank" "Palm Springs" "Reno" "Cape Town" "Las Vegas"))
 
   (add-hook 'doc-view-mode-hook 'auto-revert-mode)
 
