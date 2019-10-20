@@ -71,7 +71,10 @@ values."
             c-c++-default-mode-for-headers 'c++-mode
             )
      php
-     (python :variables python-test-runner 'pytest)
+     (python :variables
+             python-test-runner 'pytest
+             python-enable-yapf-format-on-save t
+             python-sort-imports-on-save t)
      html
      ruby
      helm
